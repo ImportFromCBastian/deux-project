@@ -1,13 +1,5 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -25,7 +17,7 @@
     "formatter": {
       "quoteStyle": "single",
       "jsxQuoteStyle": "double",
-      "semicolons": "always",
+      "semicolons": "asNeeded",
       "trailingCommas": "all"
     }
   }
