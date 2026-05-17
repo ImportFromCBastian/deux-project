@@ -1,14 +1,15 @@
+diff --git a/node_modules/@bear-block/vision-camera-ocr/.bun-tag-c53af6bed869bfe1 b/.bun-tag-c53af6bed869bfe1
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/android/src/main/java/com/bearblock/visioncameraocr/visioncameraocr/OcrFrameProcessorPluginRegistry.kt b/android/src/main/java/com/bearblock/visioncameraocr/visioncameraocr/OcrFrameProcessorPluginRegistry.kt
-index c890ac7f6c631aa6270b67066ae949ac2ce9dbd3..09554944d1595a2e4de7d79a2201ce1196664349 100644
+index c890ac7f6c631aa6270b67066ae949ac2ce9dbd3..1bff6bac2921830c93a3f3b253cf66056ff21ece 100644
 --- a/android/src/main/java/com/bearblock/visioncameraocr/visioncameraocr/OcrFrameProcessorPluginRegistry.kt
 +++ b/android/src/main/java/com/bearblock/visioncameraocr/visioncameraocr/OcrFrameProcessorPluginRegistry.kt
-@@ -9,8 +9,8 @@ class OcrFrameProcessorPluginRegistry {
-      * This ensures the plugin is registered early in the app lifecycle.
+@@ -10,7 +10,7 @@ class OcrFrameProcessorPluginRegistry {
       */
      init {
--      FrameProcessorPluginRegistry.addFrameProcessorPlugin("detectText") { proxy, options ->
+       FrameProcessorPluginRegistry.addFrameProcessorPlugin("detectText") { proxy, options ->
 -        OcrFrameProcessorPlugin(proxy, options)
-+      FrameProcessorPluginRegistry.addFrameProcessorPlugin("detectText") { proxy ->
 +        OcrFrameProcessorPlugin(proxy)
        }
      }
