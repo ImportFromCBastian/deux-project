@@ -14,7 +14,6 @@ export async function analyzeLabel(formData: FormData) {
   }
 
   try {
-    // Enviamos el FormData binario intacto a NestJS
     const response = await fetch(`${apiUrl}/ocr/extract`, {
       method: 'POST',
       body: formData,

@@ -4,19 +4,8 @@ import Image from 'next/image'
 import { useCallback, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
 import { analyzeLabel } from '../actions/ocr.action'
+import { base64ToBlob } from '@/utils/converter'
 
-// Utilidad para convertir el Base64 de la webcam a un archivo binario (Blob)
-const base64ToBlob = (base64: string, mimeType = 'image/jpeg'): Blob => {
-  const byteCharacters = atob(base64.split(',')[1])
-  const byteNumbers = new Array(byteCharacters.length)
-
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i)
-  }
-
-  const byteArray = new Uint8Array(byteNumbers)
-  return new Blob([byteArray], { type: mimeType })
-}
 
 export default function LabelScanner() {
   const webcamRef = useRef<Webcam>(null)
@@ -30,7 +19,7 @@ export default function LabelScanner() {
   const videoConstraints = {
     width: 720,
     height: 1280,
-    facingMode: 'environment', // Obliga al celular a usar la cámara trasera
+    facingMode: 'environment',
   }
 
   const captureAndSend = useCallback(async () => {
@@ -56,7 +45,7 @@ export default function LabelScanner() {
       // Le damos un nombre ficticio al archivo
       formData.append('file', imageBlob, 'capture.jpg')
 
-      // 3. Enviamos el binario al Server Action (¡Tu código anterior no cambia!)
+      // 3. Enviamos el binario al Server Action
       const result = await analyzeLabel(formData)
 
       if (result.success && result.words) {
@@ -105,7 +94,6 @@ export default function LabelScanner() {
             screenshotFormat="image/jpeg"
             videoConstraints={videoConstraints}
             className="w-full h-full object-cover"
-            // Quita el "espejo" porque estamos usando la cámara trasera
             mirrored={false}
           />
         )}
