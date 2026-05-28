@@ -7,7 +7,7 @@ export class OcrService {
 	async extractText(fileBuffer: Buffer, fileName: string): Promise<string[]> {
 		const formData = new FormData()
 
-		const blob = new Blob([new Uint8Array(fileBuffer)])
+		const blob = new Blob([new Uint8Array(fileBuffer)], { type: 'image/jpeg' })
 		formData.append('file', blob, fileName)
 
 		try {

@@ -1,23 +1,22 @@
-FROM python:3.10-slim
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
-# Instalamos las dependencias de C++ necesarias para OpenCV y EasyOCR
+# Mantenemos las librerías esenciales del sistema
 RUN apt-get update && apt-get install -y \
   libglib2.0-0 \
+  libgl1-mesa-glx \
   libsm6 \
   libxext6 \
-  libxrender-dev \
+  libgomp1 \
   && rm -rf /var/lib/apt/lists/*
 
-# Copiamos e instalamos las librerías de Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiamos nuestro código
-COPY main.py .
+# Copiamos el resto del código (El modelo se descargará automáticamente al iniciar Uvicorn)
+COPY . .
 
 EXPOSE 6060
 
-# Levantamos FastAPI con Uvicorn en modo auto-recarga para dev
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "6060", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "6060"]

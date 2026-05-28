@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useCallback, useRef, useState } from 'react'
 import Webcam from 'react-webcam'
 import { analyzeLabel } from '../actions/ocr.action'
-import { base64ToBlob } from '@/utils/converter'
+import { base64ToBlob, resizeImage } from '@/utils/converter'
 
 
 export default function LabelScanner() {
@@ -39,7 +39,8 @@ export default function LabelScanner() {
 
     try {
       // 2. Convertimos el Base64 a binario para que NestJS sea feliz
-      const imageBlob = base64ToBlob(imageBase64)
+      const resizedBase64 = await resizeImage(imageBase64, 800)
+      const imageBlob = base64ToBlob(resizedBase64)
       const formData = new FormData()
 
       // Le damos un nombre ficticio al archivo
@@ -146,9 +147,9 @@ export default function LabelScanner() {
             Texto Detectado
           </h3>
           <div className="flex flex-wrap gap-2 justify-center">
-            {words.map((word) => (
+            {words.map((word, index) => (
               <span
-                key={word}
+                key={`${word}-${index}`}
                 className="px-3 py-1.5 bg-green-50 text-green-800 rounded-lg text-sm font-medium border border-green-200 shadow-sm"
               >
                 {word}

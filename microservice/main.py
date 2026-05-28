@@ -1,25 +1,40 @@
-from fastapi import FastAPI, UploadFile, File
-import easyocr
 import io
-from PIL import Image
 import numpy as np
+from PIL import Image
+from fastapi import FastAPI, UploadFile, File, HTTPException
 
-app = FastAPI()
+from image_service import ImageProcessor
+from ocr_service import OcrEngine
 
-# gpu=False porque configurar CUDA en Docker para dev local es complejo.
-reader = easyocr.Reader(['es', 'en'], gpu=False)
+app = FastAPI(title="OCR Service con PaddleOCR")
+
+# Instanciamos los servicios globales
+processor = ImageProcessor()
+ocr_engine = OcrEngine()
 
 
 @app.post("/extract")
 async def analyze_image(file: UploadFile = File(...)):
-    # 1. Leemos los bytes crudos de la imagen (súper rápido)
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400, detail="El archivo debe ser una imagen")
+
     contents = await file.read()
 
-    # 2. Convertimos los bytes en una imagen que EasyOCR entienda
-    image = Image.open(io.BytesIO(contents)).convert('RGB')
-    image_np = np.array(image)
+    try:
+        image = Image.open(io.BytesIO(contents)).convert('RGB')
+        image_np = np.array(image)
+    except Exception:
+        raise HTTPException(
+            status_code=422, detail="No se pudo decodificar la imagen")
 
-    # detail=0 nos devuelve solo una lista limpia de palabras, sin coordenadas
-    results = reader.readtext(image_np, detail=0)
+    # Flujo declarativo y fácil de leer
+    processed_image = processor.preprocess_for_label(image_np)
+    detected_words = ocr_engine.extract_clean_words(processed_image)
 
-    return {"words": results}
+    return {"words": detected_words}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}

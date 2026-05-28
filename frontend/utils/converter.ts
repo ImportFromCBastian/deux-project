@@ -10,3 +10,18 @@ export const base64ToBlob = (base64: string, mimeType = 'image/jpeg'): Blob => {
   const byteArray = new Uint8Array(byteNumbers)
   return new Blob([byteArray], { type: mimeType })
 }
+
+export const resizeImage = async (base64: string, maxWidth: number): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new window.Image()
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width)
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.src = base64
+  })
+}

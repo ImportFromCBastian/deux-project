@@ -8,16 +8,19 @@ services:
       - ./.env
     environment:
       - INTERNAL_API_URL=${INTERNAL_API_URL}
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
     ports:
       - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
+      - /app/.turbo
+      - /app/.bun
     depends_on:
       - backend
     restart: unless-stopped
-    command: sh -c "pnpm install && pnpm run dev"
     
   backend:
     build:
