@@ -14,10 +14,8 @@ export function AccessibilityEnforcer() {
   useEffect(() => {
     if (!mounted) return
 
-    // Muta el HTML root
     document.documentElement.style.fontSize = `${fontSize}%`
 
-    // Muta el Body
     document.body.classList.toggle('font-dyslexic', dyslexiaFont)
     document.body.classList.toggle('force-reduced-motion', reducedMotion)
   }, [mounted, fontSize, dyslexiaFont, reducedMotion])

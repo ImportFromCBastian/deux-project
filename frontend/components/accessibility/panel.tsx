@@ -28,7 +28,7 @@ export function AccessibilityPanel() {
   if (!mounted) return null
 
   return (
-    <Card className="w-full max-w-sm shadow-lg">
+    <Card className="w-full shadow-lg">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg tracking-tight flex items-center justify-between">
           Ajustes de Accesibilidad

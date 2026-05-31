@@ -11,6 +11,7 @@ interface LabelCameraProps {
   onCancel: () => void
 }
 
+// Componente que muestra la cámara y tiene la logica para capturar la imagen y simular el proceso de escaneo. Se muestra al activar el scanner y se oculta al cancelar o finalizar el escaneo.
 export default function LabelCamera({ onCancel }: LabelCameraProps) {
   const webcamRef = useRef<Webcam>(null)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -20,7 +21,6 @@ export default function LabelCamera({ onCancel }: LabelCameraProps) {
     if (imageSrc) {
       setIsProcessing(true)
 
-      // TODO: Aquí enviaremos imageSrc a tu ocr.action.ts
       setTimeout(() => {
         setIsProcessing(false)
         console.log('Escaneo completado')
@@ -29,22 +29,15 @@ export default function LabelCamera({ onCancel }: LabelCameraProps) {
   }, [])
 
   return (
-    <>
-      {/* Visor de la Cámara Activa */}
-      <div className="relative flex-1 px-4 py-2 flex items-center justify-center overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="relative w-full h-full max-h-[60vh] rounded-2xl overflow-hidden ring-2 ring-slate-800 bg-black">
-          <Webcam
-            audio={false}
-            ref={webcamRef}
-            screenshotFormat="image/jpeg"
-            videoConstraints={{ facingMode: 'environment' }}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      </div>
-
-      {/* Botonera de Acción */}
-      <div className="p-4 z-10">
+    <div className="relative h-full w-full overflow-hidden animate-in zoom-in-95 duration-300">
+      <Webcam
+        audio={false}
+        ref={webcamRef}
+        screenshotFormat="image/jpeg"
+        videoConstraints={{ facingMode: 'environment' }}
+        className="absolute inset-0 z-0 h-full w-full object-cover"
+      />
+      <div className="absolute bottom-8 left-4 right-4 z-10">
         <Card className="bg-background/95 backdrop-blur border-border p-4 shadow-2xl flex flex-col gap-4 rounded-2xl animate-in slide-in-from-bottom-4 duration-300">
           <div className="flex gap-2">
             <Button
@@ -75,6 +68,6 @@ export default function LabelCamera({ onCancel }: LabelCameraProps) {
           </div>
         </Card>
       </div>
-    </>
+    </div>
   )
 }

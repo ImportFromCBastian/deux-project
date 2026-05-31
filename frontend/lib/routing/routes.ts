@@ -1,6 +1,11 @@
-import { MapIcon, PlusCircle, Scan, Settings } from 'lucide-react'
+import { HomeIcon, MapIcon, PlusCircle, Scan, Settings } from 'lucide-react'
 
 export const NAV_ITEMS = [
+  {
+    name: 'Inicio',
+    href: '/',
+    icon: HomeIcon,
+  },
   {
     name: 'Scanner',
     href: '/scanner',
