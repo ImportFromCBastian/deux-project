@@ -8,6 +8,10 @@ export async function analyzeLabel(formData: FormData) {
   }
 
   const apiUrl = process.env.INTERNAL_API_URL
+  console.log('--- DEBUG OCR ACTION ---')
+  console.log('API URL:', apiUrl)
+  console.log('File Name:', file.name)
+  console.log('File Size:', file.size)
 
   if (!apiUrl) {
     throw new Error('Falta configuración de INTERNAL_API_URL en el entorno')
@@ -19,23 +23,22 @@ export async function analyzeLabel(formData: FormData) {
       body: formData,
     })
 
-    console.log('Respuesta de NestJS:', response)
-
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error del backend:', response.status, errorText);
       return {
         success: false,
-        error: 'El motor de IA no pudo procesar la etiqueta',
+        error: `El motor de IA respondió con error ${response.status}.`,
       }
     }
 
     const data = await response.json()
-
-    return { success: true, words: data.words }
-  } catch (error) {
-    console.error('Error en Next.js al contactar con NestJS:', error)
+    return { success: true, products: data.products }
+  } catch (error: any) {
+    console.error('Error detallado en Next.js:', error)
     return {
       success: false,
-      error: 'El servicio de escaneo no está disponible',
+      error: `Error de conexión: ${error.message || 'No se pudo contactar al servidor'}`,
     }
   }
 }

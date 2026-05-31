@@ -1,61 +1,84 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 import Webcam from 'react-webcam'
 import { analyzeLabel } from '../actions/ocr.action'
 import { base64ToBlob, resizeImage } from '@/utils/converter'
 
+interface DetectedProduct {
+  text: string
+  box: number[] // [x1, y1, x2, y2]
+  confidence: number
+}
 
 export default function LabelScanner() {
   const webcamRef = useRef<Webcam>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const [words, setWords] = useState<string[]>([])
+  const [products, setProducts] = useState<DetectedProduct[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 })
+  const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 })
 
-  // Configuramos la cámara para que intente usar la trasera por defecto
+  // Efecto para medir dimensiones reales vs visuales
+  useEffect(() => {
+    if (containerRef.current && imageSrc) {
+      const { clientWidth, clientHeight } = containerRef.current
+      setDisplaySize({ width: clientWidth, height: clientHeight })
+    }
+  }, [imageSrc])
+
   const videoConstraints = {
-    width: 720,
-    height: 1280,
+    // Usamos una resolución estándar de celular pero dejamos que el sistema elija la mejor
+    aspectRatio: 9 / 16,
     facingMode: 'environment',
   }
 
   const captureAndSend = useCallback(async () => {
-    // 1. Capturamos la imagen en Base64
+    const video = webcamRef.current?.video
     const imageBase64 = webcamRef.current?.getScreenshot()
 
-    if (!imageBase64) {
-      setError('No se pudo capturar la imagen de la cámara')
+    if (!imageBase64 || !video) {
+      setError('No se pudo acceder a la cámara.')
       return
     }
 
-    // Mostramos la foto congelada y preparamos la UI
+    // Guardamos las dimensiones REALES de la captura para escalar después
+    setNaturalSize({ width: video.videoWidth, height: video.videoHeight })
     setImageSrc(imageBase64)
     setIsLoading(true)
     setError(null)
-    setWords([])
+    setProducts([])
 
     try {
-      // 2. Convertimos el Base64 a binario para que NestJS sea feliz
-      const resizedBase64 = await resizeImage(imageBase64, 800)
+      // Redimensionamos manteniendo la proporción
+      const resizedBase64 = await resizeImage(imageBase64, 1200) 
       const imageBlob = base64ToBlob(resizedBase64)
       const formData = new FormData()
-
-      // Le damos un nombre ficticio al archivo
       formData.append('file', imageBlob, 'capture.jpg')
 
-      // 3. Enviamos el binario al Server Action
       const result = await analyzeLabel(formData)
 
-      if (result.success && result.words) {
-        setWords(result.words)
+      if (result.success && result.products) {
+        const uniqueProducts: DetectedProduct[] = []
+        const seenTexts = new Set<string>()
+
+        result.products.forEach((p: DetectedProduct) => {
+          const normalizedText = p.text.toLowerCase().trim()
+          if (!seenTexts.has(normalizedText) && p.text.length > 2) {
+            seenTexts.add(normalizedText)
+            uniqueProducts.push(p)
+          }
+        })
+        setProducts(uniqueProducts)
       } else {
-        setError(result.error ?? 'Ocurrió un error inesperado al escanear')
+        setError(result.error ?? 'Error de conexión')
       }
-    } catch (_) {
-      setError('Error crítico al procesar la imagen')
+    } catch (err: any) {
+      setError(`Error: ${err.message}`)
     } finally {
       setIsLoading(false)
     }
@@ -63,32 +86,64 @@ export default function LabelScanner() {
 
   const resetScanner = () => {
     setImageSrc(null)
-    setWords([])
+    setProducts([])
     setError(null)
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-2xl shadow-sm border border-neutral-100 space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-neutral-800">Escáner en Vivo</h2>
-        <p className="text-neutral-500 text-sm">
-          Enfoca la etiqueta y presiona escanear
-        </p>
+    <div className="w-full max-w-2xl mx-auto p-4 bg-white rounded-2xl shadow-lg border border-neutral-100 space-y-4">
+      <div className="text-center">
+        <h2 className="text-xl font-bold text-neutral-800">Escáner de Góndola</h2>
+        <p className="text-neutral-500 text-xs">Captura para detectar productos</p>
       </div>
 
-      {/* Contenedor de la Cámara o de la Foto Capturada */}
-      <div className="relative rounded-xl overflow-hidden bg-black aspect-3/4 shadow-inner flex items-center justify-center">
+      <div 
+        ref={containerRef}
+        className="relative rounded-xl overflow-hidden bg-black aspect-[9/16] shadow-inner flex items-center justify-center"
+      >
         {imageSrc ? (
-          // Muestra la foto congelada que acabamos de tomar
-          <Image
-            src={imageSrc}
-            alt="Captura"
-            className="w-full h-full object-cover opacity-90"
-            width={720}
-            height={1280}
-          />
+          <div className="relative w-full h-full">
+            <img
+              src={imageSrc}
+              alt="Captura"
+              className="w-full h-full object-contain" // object-contain evita la deformación
+            />
+            
+            {!isLoading && products.map((product, index) => {
+              // ESCALADO MATEMÁTICO PRECISO
+              // 1. Calculamos cuánto se redimensionó la imagen en el backend (el backend usa 1200 como maxWidth)
+              const scaleToIA = Math.min(1, 1200 / naturalSize.width)
+              const iaWidth = naturalSize.width * scaleToIA
+              const iaHeight = naturalSize.height * scaleToIA
+
+              // 2. Calculamos la escala entre la imagen de la IA y el display actual
+              const scaleX = displaySize.width / iaWidth
+              const scaleY = displaySize.height / iaHeight
+
+              const left = product.box[0] * scaleX
+              const top = product.box[1] * scaleY
+              const width = (product.box[2] - product.box[0]) * scaleX
+              const height = (product.box[3] - product.box[1]) * scaleY
+
+              return (
+                <div
+                  key={`${product.text}-${index}`}
+                  className="absolute border-2 border-red-500 bg-red-500/20"
+                  style={{
+                    left: `${left}px`,
+                    top: `${top}px`,
+                    width: `${width}px`,
+                    height: `${height}px`,
+                  }}
+                >
+                  <span className="bg-red-600 text-white text-[8px] px-1 absolute -top-4 left-0 whitespace-nowrap">
+                    {product.text}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
         ) : (
-          // Muestra la cámara en vivo
           <Webcam
             audio={false}
             ref={webcamRef}
@@ -99,60 +154,41 @@ export default function LabelScanner() {
           />
         )}
 
-        {/* Indicador de carga superpuesto */}
         {isLoading && (
-          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center space-y-3 animate-pulse">
-            <span className="text-4xl">⚙️</span>
-            <span className="text-white font-medium text-sm tracking-wide">
-              Analizando IA...
-            </span>
+          <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center space-y-2">
+            <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="text-white text-xs">Procesando góndola...</span>
           </div>
         )}
       </div>
 
-      {/* Controles */}
-      <div className="flex justify-center pt-2">
+      <div className="flex justify-center">
         {!imageSrc ? (
           <button
             type="button"
             onClick={captureAndSend}
-            className="w-16 h-16 bg-blue-500 rounded-full border-4 border-blue-200 hover:bg-blue-600 active:scale-95 transition-all shadow-md flex items-center justify-center"
-            aria-label="Tomar foto"
+            className="w-14 h-14 bg-red-500 rounded-full border-4 border-red-200 shadow-xl flex items-center justify-center active:scale-90 transition-transform"
           >
-            <div className="w-12 h-12 rounded-full border-2 border-white/50" />
+            <div className="w-8 h-8 rounded-full border-2 border-white/20" />
           </button>
         ) : (
           <button
             type="button"
             onClick={resetScanner}
-            disabled={isLoading}
-            className="px-6 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-semibold rounded-xl transition-colors disabled:opacity-50"
+            className="px-6 py-2 bg-neutral-800 text-white text-sm font-bold rounded-full shadow-lg"
           >
-            Volver a Escanear
+            NUEVA CAPTURA
           </button>
         )}
       </div>
 
-      {/* Manejo de Errores */}
-      {error && (
-        <div className="p-4 bg-red-50 text-red-700 text-sm rounded-xl text-center font-medium border border-red-100 animate-in fade-in">
-          {error}
-        </div>
-      )}
-
-      {/* Resultados */}
-      {words.length > 0 && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 border-t border-neutral-100 pt-6">
-          <h3 className="text-sm font-bold text-neutral-700 uppercase tracking-wider text-center">
-            Texto Detectado
-          </h3>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {words.map((word, index) => (
-              <span
-                key={`${word}-${index}`}
-                className="px-3 py-1.5 bg-green-50 text-green-800 rounded-lg text-sm font-medium border border-green-200 shadow-sm"
-              >
-                {word}
+      {products.length > 0 && (
+        <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-100">
+          <p className="text-[10px] font-bold text-neutral-400 uppercase mb-2">Detectados</p>
+          <div className="flex flex-wrap gap-1">
+            {products.map((p, i) => (
+              <span key={i} className="px-2 py-0.5 bg-white border border-neutral-200 rounded text-[10px] text-neutral-600">
+                {p.text}
               </span>
             ))}
           </div>

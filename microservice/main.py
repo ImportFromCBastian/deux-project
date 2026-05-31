@@ -30,9 +30,9 @@ async def analyze_image(file: UploadFile = File(...)):
 
     # Flujo declarativo y fácil de leer
     processed_image = processor.preprocess_for_label(image_np)
-    detected_words = ocr_engine.extract_clean_words(processed_image)
+    detected_products = ocr_engine.extract_clean_words(processed_image)
 
-    return {"words": detected_words}
+    return {"products": detected_products}
 
 
 @app.get("/health")
