@@ -13,4 +13,4 @@ COPY . .
 EXPOSE 3000
 
 # Arrancamos Next.js asegurando la conexión de red correcta
-CMD ["bun", "run", "dev", "--hostname", "0.0.0.0"]
+CMD ["bun", "dev"]
