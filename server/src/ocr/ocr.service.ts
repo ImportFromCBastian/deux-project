@@ -14,34 +14,54 @@ export class OcrService {
 		formData.append('file', blob, fileName)
 
 		try {
-			const { data } = await axios.post<OcrResultDto>(
-				`${envs.ocrServiceUrl}/extract`,
-				formData,
-				{
-					headers: { 'Content-Type': 'multipart/form-data' },
-					timeout: 60000,
-				}
-			)
+			const { data } = await axios.post<OcrResultDto>(`${envs.ocrServiceUrl}/extract`, formData, {
+				headers: { 'Content-Type': 'multipart/form-data' },
+				timeout: 60000,
+			})
 
-			// Validar cada producto contra ANMAT (usando el caché interno del servicio)
-			if (data.products) {
+			// Validar cada producto 100% localmente de forma instantánea
+			if (data.products && data.products.length > 0) {
+				console.log(
+					`[OCR VALIDATION] Recibidos ${data.products.length} candidatos de texto del motor OCR.`
+				)
 				const validatedProducts = await Promise.all(
 					data.products.map(async (product) => {
-						// Solo consultamos si el texto parece un nombre de producto real (> 3 caracteres)
-						if (product.text.length > 3) {
-							const validation = await this.anmatService.validateProduct(product.text)
+						const rawText = product.text
+
+						console.log(
+							`[OCR VALIDATION] Evaluando candidato: "${rawText}" (Confianza OCR: ${(product.confidence * 100).toFixed(1)}%)`
+						)
+
+						// Validar en la base de datos local
+						const validation = await this.anmatService.validateProduct(rawText)
+						if (validation.isApto && validation.score && validation.score >= 70) {
+							console.log(
+								`[OCR VALIDATION] ¡APROBADO! "${rawText}" coincide con producto apto: "${validation.brand} - ${validation.description}" (Score: ${validation.score}%, RNPA: ${validation.rnpa})`
+							)
 							return {
 								...product,
-								isApto: validation.isApto,
-								anmatDetails: validation.isApto
-									? `RNPA: ${validation.rnpa} - ${validation.brand}`
-									: undefined,
+								text: `${validation.brand} ${validation.description}`, // Reemplazar por nombre oficial limpio
+								isApto: true,
+								anmatDetails: `RNPA: ${validation.rnpa} - ${validation.brand}`,
+								rnpa: validation.rnpa,
+								brand: validation.brand,
+								description: validation.description,
+								score: validation.score,
 							}
 						}
-						return product
+
+						// Si no coincide localmente con alta confianza, se descarta (no es apto o es basura)
+						console.log(
+							`[OCR VALIDATION] DESCARTADO: "${rawText}" no tiene coincidencia apta confiable (Score: ${validation.score ?? 0}%)`
+						)
+						return null
 					})
 				)
-				data.products = validatedProducts
+				// Filtramos los nulos (basura o productos no aptos)
+				data.products = validatedProducts.filter((p) => p !== null) as any
+				console.log(
+					`[OCR VALIDATION] Filtrado completo. Quedaron ${data.products.length} productos aptos validados.`
+				)
 			}
 
 			return data

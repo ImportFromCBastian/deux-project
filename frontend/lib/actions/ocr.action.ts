@@ -8,10 +8,6 @@ export async function analyzeLabel(formData: FormData) {
   }
 
   const apiUrl = process.env.INTERNAL_API_URL
-  console.log('--- DEBUG OCR ACTION ---')
-  console.log('API URL:', apiUrl)
-  console.log('File Name:', file.name)
-  console.log('File Size:', file.size)
 
   if (!apiUrl) {
     throw new Error('Falta configuración de INTERNAL_API_URL en el entorno')
@@ -24,8 +20,8 @@ export async function analyzeLabel(formData: FormData) {
     })
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error del backend:', response.status, errorText);
+      const errorText = await response.text()
+      console.error('Error del backend:', response.status, errorText)
       return {
         success: false,
         error: `El motor de IA respondió con error ${response.status}.`,

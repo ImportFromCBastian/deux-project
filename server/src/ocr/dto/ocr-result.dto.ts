@@ -10,11 +10,26 @@ class OcrProduct {
 	@ApiProperty({ example: 0.95 })
 	confidence: number
 
-	@ApiProperty({ example: true, description: 'Indica si el producto fue validado por ANMAT como Sin TACC' })
+	@ApiProperty({
+		example: true,
+		description: 'Indica si el producto fue validado por ANMAT como Sin TACC',
+	})
 	isApto?: boolean
 
 	@ApiProperty({ example: 'VIGENTE', description: 'Estado del registro en ANMAT' })
 	anmatDetails?: string
+
+	@ApiProperty({ example: '12345678' })
+	rnpa?: string
+
+	@ApiProperty({ example: 'SANCOR' })
+	brand?: string
+
+	@ApiProperty({ example: 'LECHE ENTERA' })
+	description?: string
+
+	@ApiProperty({ example: 85 })
+	score?: number
 }
 
 export class OcrResultDto {

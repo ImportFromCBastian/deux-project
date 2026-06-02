@@ -1,6 +1,6 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { Injectable, Logger } from '@nestjs/common'
-import axios from 'axios'
-import * as cheerio from 'cheerio'
 import * as fuzz from 'fuzzball'
 
 export interface AnmatValidation {
@@ -11,11 +11,138 @@ export interface AnmatValidation {
 	score?: number
 }
 
+interface Product {
+	rnpa: string
+	brand: string
+	description: string
+	rne: string
+}
+
 @Injectable()
 export class AnmatService {
 	private readonly logger = new Logger(AnmatService.name)
-	private readonly baseUrl = 'https://listadoalg.anmat.gob.ar/Home/Index'
 	private cache = new Map<string, AnmatValidation>()
+	private catalog: Product[] = []
+	private celiacVocabulary = new Set<string>()
+
+	// Stop words comunes a ignorar para el filtro de vocabulario
+	private readonly stopWords = new Set([
+		'CON',
+		'SIN',
+		'TACC',
+		'DEL',
+		'LOS',
+		'LAS',
+		'PARA',
+		'LIBRE',
+		'GLUTEN',
+		'NETO',
+		'CONT',
+		'CONTNETO',
+		'ESTA',
+		'ESTE',
+		'ESTOS',
+		'COMO',
+		'UNA',
+		'UNO',
+		'UNOS',
+		'POR',
+		'MAS',
+		'MÁS',
+	])
+
+	constructor() {
+		this.loadLocalCatalog()
+		this.watchCatalogFile()
+	}
+
+	private watchCatalogFile() {
+		const dataDir = path.join(process.cwd(), 'data')
+		try {
+			if (!fs.existsSync(dataDir)) {
+				fs.mkdirSync(dataDir, { recursive: true })
+			}
+			fs.watch(dataDir, (eventType, filename) => {
+				if (filename === 'anmat_celiac_catalog.json') {
+					this.logger.log(
+						`Cambio detectado en el catálogo local (disco, evento: ${eventType}). Recargando catálogo y vocabulario...`
+					)
+					// Un pequeño retraso para asegurar que el archivo terminó de escribirse
+					setTimeout(() => {
+						this.loadLocalCatalog()
+						// Limpiar caché para volver a evaluar con el nuevo catálogo
+						this.cache.clear()
+					}, 200)
+				}
+			})
+		} catch (e) {
+			this.logger.warn(`No se pudo iniciar el watcher del directorio de datos: ${e.message}`)
+		}
+	}
+
+	private normalizeText(text: string): string {
+		if (!text) return ''
+		return text
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '') // Remueve acentos
+			.replace(/[\n\r]/g, ' ') // Reemplaza saltos de línea con espacios
+			.toUpperCase()
+			.trim()
+	}
+
+	private loadLocalCatalog() {
+		try {
+			const filePath = path.join(process.cwd(), 'data', 'anmat_celiac_catalog.json')
+			if (fs.existsSync(filePath)) {
+				const rawData = fs.readFileSync(filePath, 'utf-8')
+				const rawCatalog = JSON.parse(rawData)
+
+				// Pre-normalizar los datos del catálogo para búsquedas rápidas
+				this.catalog = rawCatalog.map((prod: any) => ({
+					...prod,
+					normalizedBrand: this.normalizeText(prod.brand),
+					normalizedDescription: this.normalizeText(prod.description),
+				}))
+
+				this.logger.log(
+					`Catálogo ANMAT local cargado con éxito: ${this.catalog.length} productos (pre-normalizados).`
+				)
+				this.buildVocabulary()
+			} else {
+				this.logger.warn(`No se encontró catálogo ANMAT local en ${filePath}.`)
+			}
+		} catch (error) {
+			this.logger.error(`Error cargando catálogo ANMAT local: ${error.message}`)
+		}
+	}
+
+	private buildVocabulary() {
+		this.celiacVocabulary.clear()
+		for (const prod of this.catalog) {
+			const cBrand = (prod as any).normalizedBrand || ''
+			const cDesc = (prod as any).normalizedDescription || ''
+
+			// Palabras significativas de la marca
+			const brandWords = cBrand.split(/[\s',./-]+/)
+			for (const w of brandWords) {
+				const cleanW = w.trim()
+				if (cleanW.length > 2 && !this.stopWords.has(cleanW) && !/^\d+$/.test(cleanW)) {
+					this.celiacVocabulary.add(cleanW)
+				}
+			}
+			// Palabras significativas de la descripción
+			const descWords = cDesc.split(/[\s',./-]+/)
+			for (const w of descWords) {
+				const cleanW = w.trim()
+				if (cleanW.length > 2 && !this.stopWords.has(cleanW) && !/^\d+$/.test(cleanW)) {
+					this.celiacVocabulary.add(cleanW)
+				}
+			}
+		}
+		this.logger.log(
+			`Vocabulario celíaco local indexado: ${this.celiacVocabulary.size} palabras clave únicas.`
+		)
+	}
 
 	async validateProduct(text: string): Promise<AnmatValidation> {
 		const query = text.trim().toUpperCase()
@@ -23,73 +150,119 @@ export class AnmatService {
 			return this.cache.get(query)!
 		}
 
-		try {
-			// 1. Obtener estados de ASP.NET
-			const { data: htmlInitial } = await axios.get(this.baseUrl)
-			const $ = cheerio.load(htmlInitial)
+		this.logger.log(`[DEBUG] Recibido para validar en ANMAT local: "${query}"`)
 
-			const viewState = $('#__VIEWSTATE').val() as string
-			const viewStateGen = $('#__VIEWSTATEGENERATOR').val() as string
-			const eventValidation = $('#__EVENTVALIDATION').val() as string
-
-			// 2. Búsqueda oficial
-			const formData = new URLSearchParams()
-			formData.append('__VIEWSTATE', viewState)
-			formData.append('__VIEWSTATEGENERATOR', viewStateGen)
-			formData.append('__EVENTVALIDATION', eventValidation)
-			formData.append('ctl00$ContentPlaceHolder1$txtMarcaFantasia', query)
-			formData.append('ctl00$ContentPlaceHolder1$ddEstado', '1') // VIGENTES
-			formData.append('ctl00$ContentPlaceHolder1$cmdBuscar', 'Buscar')
-
-			const { data: htmlResults } = await axios.post(this.baseUrl, formData, {
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			})
-
-			// 3. Parsear con Fuzzy Matching
-			const result = this.parseResultsWithFuzzy(htmlResults, query)
-			this.cache.set(query, result)
-			return result
-		} catch (error) {
-			this.logger.error(`Error ANMAT "${query}": ${error.message}`)
-			return { isApto: false }
+		// Validación 100% local en base de datos
+		const result = this.validateProductLocal(query)
+		if (result.isApto && result.score) {
+			this.logger.log(
+				`[LOCAL MATCH ${result.score}%] "${query}" -> "${result.brand} - ${result.description}"`
+			)
 		}
+
+		this.cache.set(query, result)
+		return result
 	}
 
-	private parseResultsWithFuzzy(html: string, query: string): AnmatValidation {
-		const $ = cheerio.load(html)
-		const rows = $('#ctl00_ContentPlaceHolder1_GridView1 tr').not(':first-child')
+	private validateProductLocal(query: string): AnmatValidation {
+		if (this.catalog.length === 0) {
+			this.logger.warn(`[DEBUG] El catálogo está vacío! No se puede validar localmente.`)
+			return { isApto: false }
+		}
+
+		// Normalizar consulta
+		const normalizedQuery = this.normalizeText(query)
+
+		// FILTRADO RÁPIDO DE VOCABULARIO (Inverted Index Bloom Filter)
+		const queryWords = normalizedQuery
+			.split(/[\s',./-]+/)
+			.map((w) => w.trim())
+			.filter((w) => w.length > 2 && !this.stopWords.has(w))
+
+		const matchedVocab = queryWords.filter((word) => this.celiacVocabulary.has(word))
+		this.logger.log(
+			`[DEBUG] Palabras extraídas (normalizadas): [${queryWords.join(', ')}]. Coinciden con vocabulario celiaco: [${matchedVocab.join(', ')}]`
+		)
+
+		const hasVocabularyMatch = queryWords.some((word) => this.celiacVocabulary.has(word))
+		if (!hasVocabularyMatch) {
+			this.logger.log(
+				`[DEBUG] RECHAZADO: Ninguna palabra coincide con el vocabulario celíaco indexado.`
+			)
+			return { isApto: false }
+		}
+
+		// Pre-filtrado por palabras clave rápidas
+		let candidates = this.catalog.filter((prod: any) => {
+			return queryWords.some(
+				(word) => prod.normalizedBrand.includes(word) || prod.normalizedDescription.includes(word)
+			)
+		})
+		if (candidates.length === 0) {
+			candidates = this.catalog
+		}
+
+		this.logger.log(`[DEBUG] Candidatos pre-filtrados encontrados: ${candidates.length}`)
 
 		let bestMatch: AnmatValidation = { isApto: false }
 		let maxScore = 0
 
-		rows.each((_, row) => {
-			const cells = $(row).find('td')
-			const rnpa = $(cells[0]).text().trim()
-			const brand = $(cells[1]).text().trim().toUpperCase()
-			const description = $(cells[3]).text().trim().toUpperCase()
+		for (const prod of candidates) {
+			const nBrand = (prod as any).normalizedBrand
+			const nDesc = (prod as any).normalizedDescription
 
-			// ESTRATEGIA DE MATCHING ROBUSTA:
-			// 1. token_set_ratio: Ignora orden y palabras duplicadas (ideal para "CROPPERS SALADO" vs "CROPPERSMANÍ SALADO")
-			const scoreBrand = fuzz.token_set_ratio(query, brand)
-			const scoreDesc = fuzz.token_set_ratio(query, description)
-			
-			// 2. partial_ratio: Por si la IA leyó solo un pedazo del nombre largo oficial
-			const partialScore = fuzz.partial_ratio(query, `${brand} ${description}`)
+			// REGLA ESTRICTA 1: Verificación de Marca (Brand Verification)
+			// Al menos una palabra de la marca registrada DEBE estar en el OCR
+			const brandWords = nBrand
+				.split(/[\s'-]+/)
+				.filter(
+					(w: string) => w.length > 2 && w !== 'SIN' && w !== 'CON' && w !== 'DEL' && w !== 'LOS'
+				)
 
-			const currentScore = Math.max(scoreBrand, scoreDesc, partialScore)
+			if (brandWords.length > 0) {
+				const brandMatches = brandWords.some((word: string) => {
+					return normalizedQuery.includes(word) || fuzz.partial_ratio(word, normalizedQuery) >= 85
+				})
+				if (!brandMatches) {
+					continue // DESCARTAR: La marca no está presente
+				}
+			}
 
-			// Si el score es > 70% (bajamos un poco para ser más permisivos con OCR imperfecto)
-			if (currentScore > 70 && currentScore > maxScore) {
+			// REGLA ESTRICTA 2: Similitud Combinada de Frase Completa
+			const fullSortScore = fuzz.token_sort_ratio(normalizedQuery, `${nBrand} ${nDesc}`)
+			const setScoreBrand = fuzz.token_set_ratio(normalizedQuery, nBrand)
+			const setScoreDesc = fuzz.token_set_ratio(normalizedQuery, nDesc)
+			const fullSetScore = fuzz.token_set_ratio(normalizedQuery, `${nBrand} ${nDesc}`)
+
+			// Combinamos token sort ratio, token set ratio de marca y descripción,
+			// y la similitud set global (con un leve factor de escala) para tolerar palabras adicionales leídas por error (como 'SWORIAS', 'VOS')
+			const currentScore = Math.max(
+				fullSortScore,
+				Math.min(setScoreBrand, setScoreDesc),
+				fullSetScore * 0.95
+			)
+
+			if (currentScore > 74 && currentScore > maxScore) {
 				maxScore = currentScore
 				bestMatch = {
 					isApto: true,
-					rnpa,
-					brand,
-					description,
-					score: currentScore,
+					rnpa: prod.rnpa,
+					brand: prod.brand,
+					description: prod.description,
+					score: Math.round(currentScore),
 				}
 			}
-		})
+		}
+
+		if (bestMatch.isApto) {
+			this.logger.log(
+				`[DEBUG] MEJOR COINCIDENCIA LOCAL: "${normalizedQuery}" -> "${bestMatch.brand} ${bestMatch.description}" (Score: ${bestMatch.score}%)`
+			)
+		} else {
+			this.logger.log(
+				`[DEBUG] Ninguna coincidencia local superó el umbral del 75% para "${normalizedQuery}" (Mejor score: ${Math.round(maxScore)}%)`
+			)
+		}
 
 		return bestMatch
 	}
