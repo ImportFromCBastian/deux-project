@@ -30,6 +30,16 @@ export default function RealTimeScanner() {
   const [videoAspect, setVideoAspect] = useState(1)
   const [selectedProduct, setSelectedProduct] =
     useState<DetectedProduct | null>(null)
+  const [announcement, setAnnouncement] = useState('')
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setTimeout(() => {
+        closeButtonRef.current?.focus()
+      }, 150)
+    }
+  }, [selectedProduct])
 
   const processFrame = useCallback(async () => {
     if (!isScanning.current || !webcamRef.current) return
@@ -60,6 +70,14 @@ export default function RealTimeScanner() {
 
       if (result.success && result.products) {
         const now = Date.now()
+
+        result.products.forEach((p: any) => {
+          if (p.isApto) {
+            setAnnouncement(
+              `Detectado producto apto sin TACC: ${p.brand || ''} ${p.text || ''}`
+            )
+          }
+        })
         setProducts((prev) => {
           const newMap = new Map<string, DetectedProduct>()
 
@@ -172,9 +190,9 @@ export default function RealTimeScanner() {
                 const bgClass = product.isApto ? 'bg-green-500' : 'bg-red-500'
 
                 return (
-                  <div
+                  <button
                     key={`${product.text}-${index}`}
-                    className={`absolute border-[2.5px] rounded-lg transition-all duration-300 pointer-events-auto cursor-pointer hover:scale-[1.02] ${colorClass}`}
+                    className={`absolute border-[2.5px] rounded-lg transition-all duration-300 pointer-events-auto cursor-pointer hover:scale-[1.02] bg-transparent p-0 text-left focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:outline-none ${colorClass}`}
                     style={{
                       left: `${left}%`,
                       top: `${top}%`,
@@ -182,14 +200,15 @@ export default function RealTimeScanner() {
                       height: `${height}%`,
                     }}
                     onClick={() => setSelectedProduct(product)}
+                    aria-label={`${product.isApto ? 'Producto apto sin TACC' : 'Producto no verificado'}: ${product.text}. Presione Enter para ver datos oficiales.`}
                   >
                     <div
-                      className={`absolute -top-6 left-0 text-white text-[7px] px-1.5 py-0.5 font-black whitespace-nowrap rounded-t-md uppercase flex items-center gap-1 ${bgClass}`}
+                      className={`absolute -top-7 left-0 text-white text-[10px] px-2 py-0.5 font-black whitespace-nowrap rounded-t-md uppercase flex items-center gap-1 ${bgClass}`}
                     >
-                      {product.isApto && <span>✅</span>}
+                      {product.isApto && <span aria-hidden="true">✅</span>}
                       {product.text}
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
@@ -202,14 +221,16 @@ export default function RealTimeScanner() {
         <div className="p-6 bg-neutral-950 border-t border-white/5 pb-6">
           <div className="flex flex-wrap gap-2 justify-center max-h-[120px] overflow-y-auto">
             {products.map((p, i) => (
-              <div
+              <button
                 key={i}
-                className={`px-3 py-2 rounded-xl border flex flex-col gap-0.5 cursor-pointer hover:bg-white/5 active:scale-95 transition-all ${p.isApto ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'}`}
+                className={`px-3 py-2 rounded-xl border flex flex-col gap-0.5 text-left cursor-pointer hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none active:scale-95 transition-all ${p.isApto ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'}`}
                 onClick={() => setSelectedProduct(p)}
+                aria-label={`Ver detalles de ${p.text}`}
               >
                 <div className="flex items-center gap-2">
                   <div
                     className={`w-1.5 h-1.5 rounded-full ${p.isApto ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
+                    aria-hidden="true"
                   />
                   <span
                     className={`text-[10px] font-bold ${p.isApto ? 'text-green-400' : 'text-white'}`}
@@ -222,7 +243,7 @@ export default function RealTimeScanner() {
                     {p.anmatDetails}
                   </span>
                 )}
-              </div>
+              </button>
             ))}
             {products.length === 0 && (
               <span className="text-white/20 text-[9px] font-bold animate-pulse tracking-widest">
@@ -242,11 +263,17 @@ export default function RealTimeScanner() {
             onClick={() => setSelectedProduct(null)}
           />
 
-          <div className="relative w-full max-w-md bg-neutral-900 border-t border-white/10 rounded-t-3xl p-6 shadow-2xl animate-slide-up flex flex-col gap-4 pointer-events-auto z-10">
-            {/* Handle bar */}
+          <div
+            className="relative w-full max-w-md bg-neutral-900 border-t border-white/10 rounded-t-3xl p-6 shadow-2xl animate-slide-up flex flex-col gap-4 pointer-events-auto z-10"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+            aria-describedby="modal-description"
+          >
+            {/* Handle bar (decorative only) */}
             <div
-              className="mx-auto w-12 h-1.5 rounded-full bg-white/20 mb-2 cursor-pointer"
-              onClick={() => setSelectedProduct(null)}
+              className="mx-auto w-12 h-1.5 rounded-full bg-white/20 mb-2"
+              aria-hidden="true"
             />
 
             {/* Header */}
@@ -254,6 +281,7 @@ export default function RealTimeScanner() {
               <div className="flex items-center gap-2.5">
                 <div
                   className={`p-2 rounded-xl ${selectedProduct.isApto ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}
+                  aria-hidden="true"
                 >
                   {selectedProduct.isApto ? (
                     <ShieldCheck className="w-6 h-6" />
@@ -263,21 +291,26 @@ export default function RealTimeScanner() {
                 </div>
                 <div>
                   <span
+                    id="modal-description"
                     className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${selectedProduct.isApto ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}
                   >
                     {selectedProduct.isApto
                       ? 'Apto Sin TACC'
                       : 'No verificado / No Apto'}
                   </span>
-                  <h2 className="text-white font-bold text-lg leading-tight mt-1">
+                  <h2
+                    id="modal-title"
+                    className="text-white font-bold text-lg leading-tight mt-1"
+                  >
                     {selectedProduct.brand || selectedProduct.text}
                   </h2>
                 </div>
               </div>
               <button
+                ref={closeButtonRef}
                 onClick={() => setSelectedProduct(null)}
-                className="p-1.5 rounded-full bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                aria-label="Cerrar detalles"
+                className="p-1.5 rounded-full bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+                aria-label="Cerrar detalles de producto"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -331,6 +364,11 @@ export default function RealTimeScanner() {
           </div>
         </div>
       )}
+
+      {/* Región de lectura de pantalla invisible pero accesible por voz */}
+      <div className="sr-only" aria-live="assertive" aria-atomic="true">
+        {announcement}
+      </div>
     </div>
   )
 }
