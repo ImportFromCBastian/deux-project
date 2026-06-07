@@ -3,12 +3,12 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/accessibility/provider'
 import { BottomNav } from '@/components/ui/layout/bottom-nav'
+import { AccessibilityEnforcer } from '@/components/accessibility/enforcer'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
 })
-
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
@@ -30,6 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} flex h-dvh w-full flex-col overflow-hidden bg-background text-foreground antialiased transition-colors duration-200`}
       >
         <Providers>
+          <AccessibilityEnforcer />
           <main className="flex flex-1 flex-col overflow-y-auto min-h-0">
             {children}
           </main>

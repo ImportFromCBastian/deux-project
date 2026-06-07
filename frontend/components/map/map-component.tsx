@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -29,14 +29,30 @@ interface Store {
   longitude: number
 }
 
+function LocationSetter({ coords }: { coords: [number, number] }) {
+  const map = useMap()
+  useEffect(() => {
+    map.setView(coords, 15)
+  }, [coords, map])
+  return null
+}
+
 export default function MapComponent() {
   const [stores, setStores] = useState<Store[]>([])
+  const [userCoords, setUserCoords] = useState<[number, number] | null>(null)
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/stores`)
       .then(res => res.json())
       .then(setStores)
       .catch(console.error)
+  }, [])
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      pos => setUserCoords([pos.coords.latitude, pos.coords.longitude]),
+      () => {} // si el usuario niega el permiso, queda en Buenos Aires
+    )
   }, [])
 
   return (
@@ -49,11 +65,11 @@ export default function MapComponent() {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      {userCoords && <LocationSetter coords={userCoords} />}
       {stores.map(store => (
         <Marker key={store.id} position={[store.latitude, store.longitude]} icon={greenIcon}>
           <Popup>
             <p className="font-bold text-sm">🌿 {store.name}</p>
-            <p className="text-xs text-gray-600">{store.address}</p>
           </Popup>
         </Marker>
       ))}

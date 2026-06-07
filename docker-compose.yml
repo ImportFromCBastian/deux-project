@@ -7,6 +7,7 @@ services:
       - ./.env
     environment:
       - INTERNAL_API_URL=${INTERNAL_API_URL}
+      - NGROK_TUNNEL=${NGROK_TUNNEL}
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
     ports:

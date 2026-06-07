@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import { useEffect, useState } from 'react'
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -16,6 +16,14 @@ interface Props {
   onSelect: (coords: { lat: number; lng: number }) => void
 }
 
+function LocationSetter({ coords }: { coords: [number, number] }) {
+  const map = useMap()
+  useEffect(() => {
+    map.setView(coords, 15)
+  }, [coords, map])
+  return null
+}
+
 function ClickHandler({ onSelect, setMarker }: { onSelect: Props['onSelect']; setMarker: (c: [number, number]) => void }) {
   useMapEvents({
     click(e) {
@@ -28,6 +36,14 @@ function ClickHandler({ onSelect, setMarker }: { onSelect: Props['onSelect']; se
 
 export default function LocationPicker({ onSelect }: Props) {
   const [marker, setMarker] = useState<[number, number] | null>(null)
+  const [userCoords, setUserCoords] = useState<[number, number] | null>(null)
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      pos => setUserCoords([pos.coords.latitude, pos.coords.longitude]),
+      () => {}
+    )
+  }, [])
 
   return (
     <MapContainer
@@ -39,6 +55,7 @@ export default function LocationPicker({ onSelect }: Props) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      {userCoords && <LocationSetter coords={userCoords} />}
       <ClickHandler onSelect={onSelect} setMarker={setMarker} />
       {marker && <Marker position={marker} />}
     </MapContainer>
