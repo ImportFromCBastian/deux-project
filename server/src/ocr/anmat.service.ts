@@ -24,6 +24,14 @@ export class AnmatService {
 	private cache = new Map<string, AnmatValidation>()
 	private catalog: Product[] = []
 	private celiacVocabulary = new Set<string>()
+	private recentMatches: Array<{
+		rnpa: string
+		brand: string
+		description: string
+		normalizedBrand: string
+		normalizedDescription: string
+		timestamp: number
+	}> = []
 
 	// Stop words comunes a ignorar para el filtro de vocabulario
 	private readonly stopWords = new Set([
@@ -97,12 +105,109 @@ export class AnmatService {
 				const rawData = fs.readFileSync(filePath, 'utf-8')
 				const rawCatalog = JSON.parse(rawData)
 
-				// Pre-normalizar los datos del catálogo para búsquedas rápidas
-				this.catalog = rawCatalog.map((prod: any) => ({
-					...prod,
-					normalizedBrand: this.normalizeText(prod.brand),
-					normalizedDescription: this.normalizeText(prod.description),
-				}))
+				// 1. Obtener todas las marcas registradas conocidas (que no sean "NO REGISTRA")
+				const knownBrands = new Set<string>()
+				for (const prod of rawCatalog) {
+					if (prod.brand && prod.brand !== 'NO REGISTRA') {
+						const normB = this.normalizeText(prod.brand)
+						if (normB) knownBrands.add(normB)
+					}
+				}
+
+				// 2. Pre-normalizar los datos del catálogo para búsquedas rápidas
+				this.catalog = rawCatalog.map((prod: any) => {
+					const normalizedBrandOriginal = this.normalizeText(prod.brand)
+					const normalizedDescriptionOriginal = this.normalizeText(prod.description)
+					const normalizedFantasyOriginal = this.normalizeText(prod.fantasyName)
+
+					let finalBrand = normalizedBrandOriginal
+					let finalDescription = normalizedDescriptionOriginal
+
+					// Si la marca es "NO REGISTRA", intentamos deducirla de fantasyName
+					if (
+						normalizedBrandOriginal === 'NO REGISTRA' &&
+						normalizedFantasyOriginal &&
+						normalizedFantasyOriginal !== 'NO REGISTRA'
+					) {
+						// Separar por guión para identificar marca/descripción
+						const parts = normalizedFantasyOriginal
+							.split('-')
+							.map((p) => p.trim())
+							.filter(Boolean)
+
+						if (parts.length > 1) {
+							// Buscar si alguna parte es una marca conocida
+							let foundBrandIndex = -1
+							for (let i = 0; i < parts.length; i++) {
+								if (knownBrands.has(parts[i])) {
+									foundBrandIndex = i
+									break
+								}
+							}
+
+							if (foundBrandIndex !== -1) {
+								finalBrand = parts[foundBrandIndex]
+								finalDescription = parts.filter((_, idx) => idx !== foundBrandIndex).join(' ')
+							} else {
+								// Asumir la parte más corta como marca y la más larga como descripción
+								let shortestIdx = 0
+								let shortestLen = parts[0].length
+								for (let i = 1; i < parts.length; i++) {
+									if (parts[i].length < shortestLen) {
+										shortestLen = parts[i].length
+										shortestIdx = i
+									}
+								}
+								finalBrand = parts[shortestIdx]
+								finalDescription = parts.filter((_, idx) => idx !== shortestIdx).join(' ')
+							}
+						} else {
+							// Si no hay guión, ver si alguna palabra de fantasyName es marca conocida
+							const words = normalizedFantasyOriginal.split(/\s+/)
+							let foundBrandWord = ''
+							for (const w of words) {
+								if (knownBrands.has(w)) {
+									foundBrandWord = w
+									break
+								}
+							}
+
+							if (foundBrandWord) {
+								finalBrand = foundBrandWord
+								finalDescription = normalizedFantasyOriginal
+							} else {
+								// Usar la última palabra como marca
+								if (words.length > 1) {
+									finalBrand = words[words.length - 1]
+									finalDescription = normalizedFantasyOriginal
+								} else {
+									finalBrand = normalizedFantasyOriginal
+								}
+							}
+						}
+
+						// Mantener también la descripción original
+						if (normalizedDescriptionOriginal && normalizedDescriptionOriginal !== 'NO REGISTRA') {
+							finalDescription = `${finalDescription} ${normalizedDescriptionOriginal}`.trim()
+						}
+					}
+
+					// Asegurar que fantasyName esté en finalDescription si no lo está ya
+					if (
+						normalizedFantasyOriginal &&
+						normalizedFantasyOriginal !== 'NO REGISTRA' &&
+						!finalDescription.includes(normalizedFantasyOriginal)
+					) {
+						finalDescription = `${normalizedFantasyOriginal} ${finalDescription}`.trim()
+					}
+
+					return {
+						...prod,
+						normalizedBrand: finalBrand,
+						normalizedDescription: finalDescription,
+						normalizedFantasyName: normalizedFantasyOriginal,
+					}
+				})
 
 				this.logger.log(
 					`Catálogo ANMAT local cargado con éxito: ${this.catalog.length} productos (pre-normalizados).`
@@ -123,11 +228,18 @@ export class AnmatService {
 			const cDesc = (prod as any).normalizedDescription || ''
 
 			// Palabras significativas de la marca
-			const brandWords = cBrand.split(/[\s',./-]+/)
-			for (const w of brandWords) {
-				const cleanW = w.trim()
-				if (cleanW.length > 2 && !this.stopWords.has(cleanW) && !/^\d+$/.test(cleanW)) {
-					this.celiacVocabulary.add(cleanW)
+			if (cBrand !== 'NO REGISTRA') {
+				const brandWords = cBrand.split(/[\s',./-]+/)
+				for (const w of brandWords) {
+					const cleanW = w.trim()
+					if (
+						cleanW.length > 2 &&
+						!this.stopWords.has(cleanW) &&
+						!/^\d+$/.test(cleanW) &&
+						cleanW !== 'REGISTRA'
+					) {
+						this.celiacVocabulary.add(cleanW)
+					}
 				}
 			}
 			// Palabras significativas de la descripción
@@ -147,7 +259,43 @@ export class AnmatService {
 	async validateProduct(text: string): Promise<AnmatValidation> {
 		const query = text.trim().toUpperCase()
 		if (this.cache.has(query)) {
-			return this.cache.get(query)!
+			const cached = this.cache.get(query)!
+			if (cached.isApto) {
+				return cached
+			}
+		}
+
+		// Buscar en la memoria a corto plazo para evitar parpadeos (flickering) del escáner
+		const now = Date.now()
+		this.recentMatches = this.recentMatches.filter((m) => now - m.timestamp < 6000)
+
+		const queryWords = this.normalizeText(query)
+			.split(/[\s',./-]+/)
+			.map((w) => w.trim())
+			.filter((w) => w.length > 3 && !this.stopWords.has(w))
+
+		if (queryWords.length > 0) {
+			for (const match of this.recentMatches) {
+				const matchesAll = queryWords.every(
+					(word) =>
+						match.normalizedBrand.includes(word) || match.normalizedDescription.includes(word)
+				)
+				if (matchesAll) {
+					match.timestamp = now
+					const result = {
+						isApto: true,
+						rnpa: match.rnpa,
+						brand: match.brand,
+						description: match.description,
+						score: 100,
+					}
+					this.logger.log(
+						`[RECENT MATCH MEMORY] Reusando coincidencia de memoria reciente para "${query}" -> "${result.brand} - ${result.description}"`
+					)
+					this.cache.set(query, result)
+					return result
+				}
+			}
 		}
 
 		this.logger.log(`[DEBUG] Recibido para validar en ANMAT local: "${query}"`)
@@ -158,6 +306,19 @@ export class AnmatService {
 			this.logger.log(
 				`[LOCAL MATCH ${result.score}%] "${query}" -> "${result.brand} - ${result.description}"`
 			)
+
+			// Guardar en la memoria a corto plazo para reusar en lecturas incompletas subsecuentes
+			const matchItem = {
+				rnpa: result.rnpa!,
+				brand: result.brand!,
+				description: result.description!,
+				normalizedBrand: this.normalizeText(result.brand!),
+				normalizedDescription: this.normalizeText(result.description!),
+				timestamp: now,
+			}
+			if (!this.recentMatches.some((m) => m.rnpa === matchItem.rnpa)) {
+				this.recentMatches.push(matchItem)
+			}
 		}
 
 		this.cache.set(query, result)
@@ -195,7 +356,9 @@ export class AnmatService {
 		// Pre-filtrado por palabras clave rápidas
 		let candidates = this.catalog.filter((prod: any) => {
 			return queryWords.some(
-				(word) => prod.normalizedBrand.includes(word) || prod.normalizedDescription.includes(word)
+				(word) =>
+					(prod.normalizedBrand.includes(word) && prod.normalizedBrand !== 'NO REGISTRA') ||
+					prod.normalizedDescription.includes(word)
 			)
 		})
 		if (candidates.length === 0) {
@@ -213,11 +376,20 @@ export class AnmatService {
 
 			// REGLA ESTRICTA 1: Verificación de Marca (Brand Verification)
 			// Al menos una palabra de la marca registrada DEBE estar en el OCR
-			const brandWords = nBrand
-				.split(/[\s'-]+/)
-				.filter(
-					(w: string) => w.length > 2 && w !== 'SIN' && w !== 'CON' && w !== 'DEL' && w !== 'LOS'
-				)
+			const brandWords =
+				nBrand === 'NO REGISTRA'
+					? []
+					: nBrand
+							.split(/[\s'-]+/)
+							.filter(
+								(w: string) =>
+									w.length > 2 &&
+									w !== 'SIN' &&
+									w !== 'CON' &&
+									w !== 'DEL' &&
+									w !== 'LOS' &&
+									w !== 'REGISTRA'
+							)
 
 			if (brandWords.length > 0) {
 				const brandMatches = brandWords.some((word: string) => {
@@ -247,8 +419,8 @@ export class AnmatService {
 				bestMatch = {
 					isApto: true,
 					rnpa: prod.rnpa,
-					brand: prod.brand,
-					description: prod.description,
+					brand: prod.brand === 'NO REGISTRA' ? nBrand : prod.brand,
+					description: prod.brand === 'NO REGISTRA' ? nDesc : prod.description,
 					score: Math.round(currentScore),
 				}
 			}

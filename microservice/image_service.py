@@ -22,11 +22,8 @@ class ImageProcessor:
         limg = cv2.merge((cl, a, b))
         enhanced = cv2.cvtColor(limg, cv2.COLOR_LAB2RGB)
 
-        # 3. Denoising ligero para eliminar grano de cámara móvil
-        denoised = cv2.fastNlMeansDenoisingColored(enhanced, None, 10, 10, 7, 21)
-
-        # 4. Sharpening adaptativo (Unsharp Mask)
-        gaussian_3 = cv2.GaussianBlur(denoised, (0, 0), 2.0)
-        unsharp_mask = cv2.addWeighted(denoised, 1.5, gaussian_3, -0.5, 0)
-
+        # 3. Sharpening adaptativo (Unsharp Mask) sin denoising agresivo para mantener bordes nítidos
+        gaussian_3 = cv2.GaussianBlur(enhanced, (0, 0), 2.0)
+        unsharp_mask = cv2.addWeighted(enhanced, 1.5, gaussian_3, -0.5, 0)
+        
         return unsharp_mask

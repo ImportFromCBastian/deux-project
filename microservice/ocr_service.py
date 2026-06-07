@@ -34,8 +34,9 @@ class CeliacSpellingCorrector:
             
             text_pool = []
             for prod in catalog:
-                text_pool.append(prod.get('brand', ''))
-                text_pool.append(prod.get('description', ''))
+                text_pool.append(prod.get('brand', '') or '')
+                text_pool.append(prod.get('description', '') or '')
+                text_pool.append(prod.get('fantasyName', '') or '')
             
             joined_text = " ".join(text_pool).upper()
             words = re.findall(r'[A-ZÁÉÍÓÚÑ]{3,}', joined_text)
@@ -143,7 +144,7 @@ class OcrEngine:
             use_gpu=False,
             show_log=False,
             det_limit_side_len=2000, 
-            det_db_unclip_ratio=2.2,
+            det_db_unclip_ratio=1.8,
             rec_char_thresh=0.4
         )
         self.corrector = CeliacSpellingCorrector()
