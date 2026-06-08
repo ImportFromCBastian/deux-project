@@ -158,7 +158,7 @@ export default function RealTimeScanner() {
 
         {/* Overlay IA + ANMAT */}
         {isLive && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
             <div
               className="relative"
               style={{
@@ -192,6 +192,8 @@ export default function RealTimeScanner() {
                 return (
                   <button
                     key={`${product.text}-${index}`}
+                    type="button"
+                    tabIndex={0}
                     className={`absolute border-[2.5px] rounded-lg transition-all duration-300 pointer-events-auto cursor-pointer hover:scale-[1.02] bg-transparent p-0 text-left focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:outline-none ${colorClass}`}
                     style={{
                       left: `${left}%`,
@@ -223,6 +225,8 @@ export default function RealTimeScanner() {
             {products.map((p, i) => (
               <button
                 key={i}
+                type="button"
+                tabIndex={0}
                 className={`px-3 py-2 rounded-xl border flex flex-col gap-0.5 text-left cursor-pointer hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:outline-none active:scale-95 transition-all ${p.isApto ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'}`}
                 onClick={() => setSelectedProduct(p)}
                 aria-label={`Ver detalles de ${p.text}`}
