@@ -205,7 +205,7 @@ export default function RealTimeScanner() {
                     aria-label={`${product.isApto ? 'Producto apto sin TACC' : 'Producto no verificado'}: ${product.text}. Presione Enter para ver datos oficiales.`}
                   >
                     <div
-                      className={`absolute -top-7 left-0 text-white text-[10px] px-2 py-0.5 font-black whitespace-nowrap rounded-t-md uppercase flex items-center gap-1 ${bgClass}`}
+                      className={`absolute -top-7 left-0 text-white text-[10px] px-2 py-0.5 font-black whitespace-nowrap rounded-t-md uppercase flex items-center gap-1 pointer-events-none ${bgClass}`}
                     >
                       {product.isApto && <span aria-hidden="true">✅</span>}
                       {product.text}
@@ -243,15 +243,15 @@ export default function RealTimeScanner() {
                   </span>
                 </div>
                 {p.isApto && p.anmatDetails && (
-                  <span className="text-[7px] text-green-500/60 font-medium tracking-tight pl-3">
+                  <span className="text-[10px] text-green-500/70 dark:text-green-400/80 font-bold tracking-tight pl-3">
                     {p.anmatDetails}
                   </span>
                 )}
               </button>
             ))}
             {products.length === 0 && (
-              <span className="text-white/20 text-[9px] font-bold animate-pulse tracking-widest">
-                ANALIZANDO GÓNDOLA...
+              <span className="text-white/60 dark:text-white/80 text-xs md:text-sm font-black animate-pulse tracking-widest uppercase">
+                ESCANEANDO GÓNDOLA...
               </span>
             )}
           </div>
