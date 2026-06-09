@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
+import { AccessibilityEnforcer } from '@/components/accessibility/enforcer'
 import { Providers } from '@/components/accessibility/provider'
 import { BottomNav } from '@/components/ui/layout/bottom-nav'
-import { AccessibilityEnforcer } from '@/components/accessibility/enforcer'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

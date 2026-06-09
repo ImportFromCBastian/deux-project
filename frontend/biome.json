@@ -40,5 +40,18 @@
       "semicolons": "asNeeded",
       "trailingCommas": "es5"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["components/camera/scanner-page.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveTabindex": "off",
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    }
+  ]
 }

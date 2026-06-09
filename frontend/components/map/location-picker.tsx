@@ -1,13 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
+import { useEffect, useState } from 'react'
+import {
+  MapContainer,
+  Marker,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconRetinaUrl:
+    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
@@ -24,7 +31,13 @@ function LocationSetter({ coords }: { coords: [number, number] }) {
   return null
 }
 
-function ClickHandler({ onSelect, setMarker }: { onSelect: Props['onSelect']; setMarker: (c: [number, number]) => void }) {
+function ClickHandler({
+  onSelect,
+  setMarker,
+}: {
+  onSelect: Props['onSelect']
+  setMarker: (c: [number, number]) => void
+}) {
   useMapEvents({
     click(e) {
       onSelect({ lat: e.latlng.lat, lng: e.latlng.lng })
@@ -40,7 +53,7 @@ export default function LocationPicker({ onSelect }: Props) {
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      pos => setUserCoords([pos.coords.latitude, pos.coords.longitude]),
+      (pos) => setUserCoords([pos.coords.latitude, pos.coords.longitude]),
       () => {}
     )
   }, [])

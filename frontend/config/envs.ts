@@ -5,7 +5,7 @@ interface EnvConfig {
 const getEnvs = (): EnvConfig => {
   const ngrokTunnelUrl = process.env.NGROK_TUNNEL || 'http://localhost:3000'
   return {
-    ngrokTunnelUrl
+    ngrokTunnelUrl,
   }
 }
 

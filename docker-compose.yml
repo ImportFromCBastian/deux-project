@@ -47,10 +47,13 @@ services:
     container_name: python_ocr_dev
     env_file:
       - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
     ports:
       - "${OCR_PORT_EXTERNAL:-6060}:${OCR_PORT_INTERNAL:-6060}"
     volumes:
       - ./microservice:/app
+      - ./server/data:/app/data:ro
     restart: unless-stopped
 
   db:

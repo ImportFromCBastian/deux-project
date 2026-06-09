@@ -1,4 +1,10 @@
-import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common'
+import {
+	BadRequestException,
+	Controller,
+	Post,
+	UploadedFile,
+	UseInterceptors,
+} from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import 'multer'
@@ -31,7 +37,9 @@ export class OcrController {
 	@ApiResponse({ status: 400, description: 'El archivo enviado no es válido o está corrupto.' })
 	@ApiResponse({ status: 500, description: 'Error de conexión con el microservicio de IA.' })
 	async extractText(@UploadedFile() file: Express.Multer.File): Promise<OcrResultDto> {
-		const words = await this.ocrService.extractText(file.buffer, file.originalname)
-		return { words }
+		if (!file) {
+			throw new BadRequestException('No se recibió ningún archivo en el campo "file"')
+		}
+		return await this.ocrService.extractText(file.buffer, file.originalname)
 	}
 }
