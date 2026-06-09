@@ -1,5 +1,4 @@
 services:
-
   frontend:
     build:
       context: ./frontend
@@ -8,6 +7,7 @@ services:
       - ./.env
     environment:
       - INTERNAL_API_URL=${INTERNAL_API_URL}
+      - NGROK_TUNNEL=${NGROK_TUNNEL}
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
     ports:
@@ -21,13 +21,13 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
-    
+
   backend:
     build:
       context: ./server
     container_name: nestjs_backend_dev
-    env_file: 
-      - ./.env 
+    env_file:
+      - ./.env
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND_PORT_INTERNAL:-3001}
@@ -38,6 +38,7 @@ services:
       - /app/node_modules
     depends_on:
       - ocr-service
+      - db
     restart: unless-stopped
 
   ocr-service:
@@ -51,3 +52,17 @@ services:
     volumes:
       - ./microservice:/app
     restart: unless-stopped
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    env_file:
+      - ./.env
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
