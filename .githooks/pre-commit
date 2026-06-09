@@ -1,0 +1,53 @@
+#!/bin/sh
+
+echo "Ejecutando formateo inteligente por directorios con Biome..."
+
+# 1. Obtener archivos en el Stage Y FILTRAR por extensiones válidas
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx|json|css)$')
+
+if [ -z "$STAGED_FILES" ]; then
+  echo "✅ No hay archivos para formatear."
+  exit 0
+fi
+
+# Variable para rastrear si algo falla
+HAS_ERROR=0
+
+# 2. Iterar sobre cada archivo modificado
+for FILE in $STAGED_FILES; do
+
+  # --- LÓGICA PARA EL FRONTEND ---
+  if echo "$FILE" | grep -q "^frontend/"; then
+    REL_FILE=$(echo "$FILE" | sed 's/^frontend\///')
+    
+    echo "🎨 Formateando (Frontend): $REL_FILE"
+    
+    cd frontend
+    bunx biome format --write "$REL_FILE" || HAS_ERROR=1
+    cd ..
+    
+    git add "$FILE"
+
+  # --- LÓGICA PARA EL SERVER ---
+  elif echo "$FILE" | grep -q "^server/"; then
+    REL_FILE=$(echo "$FILE" | sed 's/^server\///')
+    
+    echo "⚙️ Formateando (Server): $REL_FILE"
+    
+    cd server
+    bunx biome format --write "$REL_FILE" || HAS_ERROR=1
+    cd ..
+    
+    git add "$FILE"
+  fi
+
+done
+
+# 3. Si hubo algún error en cualquier archivo, abortamos
+if [ $HAS_ERROR -ne 0 ]; then
+  echo "❌ El formateo falló en algunos archivos. Revisa la consola. Commit abortado."
+  exit 1
+fi
+
+echo "✅ Todos los entornos formateados correctamente. Creando commit."
+exit 0

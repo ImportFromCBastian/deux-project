@@ -1,0 +1,53 @@
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: nextjs_frontend_dev
+    env_file:
+      - ./.env
+    environment:
+      - INTERNAL_API_URL=${INTERNAL_API_URL}
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+      - /app/.turbo
+      - /app/.bun
+    depends_on:
+      - backend
+    restart: unless-stopped
+    
+  backend:
+    build:
+      context: ./server
+    container_name: nestjs_backend_dev
+    env_file: 
+      - ./.env 
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${BACKEND_PORT_INTERNAL:-3001}
+    ports:
+      - "${BACKEND_PORT_EXTERNAL:-3001}:${BACKEND_PORT_INTERNAL:-3001}"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    depends_on:
+      - ocr-service
+    restart: unless-stopped
+
+  ocr-service:
+    build:
+      context: ./microservice
+    container_name: python_ocr_dev
+    env_file:
+      - ./.env
+    ports:
+      - "${OCR_PORT_EXTERNAL:-6060}:${OCR_PORT_INTERNAL:-6060}"
+    volumes:
+      - ./microservice:/app
+    restart: unless-stopped
