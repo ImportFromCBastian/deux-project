@@ -23,7 +23,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-dyslexic: 'OpenDyslexic', 'Comic Sans MS', sans-serif;
+  --font-dyslexic: "OpenDyslexic", "Comic Sans MS", sans-serif;
 }
 
 /* Tema Claro (Por defecto) */
@@ -67,19 +67,19 @@
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(0.3 0 0); 
+  --input: oklch(0.3 0 0);
   --ring: oklch(0.556 0 0);
 }
 
 /* Tema Alto Contraste */
 .high-contrast {
-  --background: oklch(0 0 0); 
-  --foreground: oklch(1 0 0); 
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
   --card: oklch(0 0 0);
   --card-foreground: oklch(1 0 0);
   --popover: oklch(0 0 0);
   --popover-foreground: oklch(1 0 0);
-  --primary: oklch(0.95 0.2 100); 
+  --primary: oklch(0.95 0.2 100);
   --primary-foreground: oklch(0 0 0);
   --secondary: oklch(0.2 0 0);
   --secondary-foreground: oklch(1 0 0);
@@ -89,7 +89,7 @@
   --accent-foreground: oklch(1 0 0);
   --destructive: oklch(0.6 0.2 20);
   --border: oklch(1 0 0);
-  --input: oklch(0.4 0 0); 
+  --input: oklch(0.4 0 0);
   --ring: oklch(0.95 0.2 100);
 }
 
@@ -105,7 +105,8 @@
 }
 
 /* Modificadores globales controlados por JS (Zustand) */
-.font-dyslexic {
+.font-dyslexic,
+.font-dyslexic * {
   font-family: var(--font-dyslexic) !important;
   letter-spacing: 0.05em;
   word-spacing: 0.1em;
@@ -115,4 +116,27 @@
   animation-duration: 0.01ms !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
 }
