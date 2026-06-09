@@ -146,6 +146,13 @@ export default function RealTimeScanner() {
 
   return (
     <div className="relative flex-1 w-full h-full bg-background text-foreground flex flex-col font-sans overflow-hidden">
+      {/* Header */}
+      <div className="bg-card border-b border-border px-4 py-3 z-10 shrink-0">
+        <h1 className="text-lg font-bold text-foreground">
+          Escáner de Góndola
+        </h1>
+      </div>
+
       {/* Visor */}
       <div
         ref={containerRef}
@@ -156,6 +163,8 @@ export default function RealTimeScanner() {
           ref={webcamRef}
           screenshotFormat="image/jpeg"
           className="max-w-full max-h-full object-contain"
+          title="Cámara en vivo para escáner de productos"
+          aria-label="Cámara en vivo para escaneo de códigos de barra y etiquetas de productos"
           videoConstraints={{
             facingMode: 'environment',
             width: { ideal: 1280 },

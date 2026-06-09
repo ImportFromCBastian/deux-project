@@ -47,9 +47,9 @@ export function AccessibilityPanel() {
 
       <CardContent className="space-y-6">
         <div className="space-y-3">
-          <Label className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-sm leading-none font-medium select-none">
             <Type className="w-4 h-4" /> Tamaño de Fuente ({fontSize}%)
-          </Label>
+          </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -73,7 +73,9 @@ export function AccessibilityPanel() {
         </div>
 
         <div className="space-y-3">
-          <Label>Modo Visual</Label>
+          <div className="text-sm leading-none font-medium select-none">
+            Modo Visual
+          </div>
           <div className="grid grid-cols-3 gap-2">
             {/* Usamos resolvedTheme para determinar la variante activa */}
             <Button
