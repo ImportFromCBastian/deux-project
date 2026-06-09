@@ -145,7 +145,7 @@ export default function RealTimeScanner() {
   }, [processFrame])
 
   return (
-    <div className="relative flex-1 w-full h-full bg-black flex flex-col font-sans overflow-hidden">
+    <div className="relative flex-1 w-full h-full bg-background text-foreground flex flex-col font-sans overflow-hidden">
       {/* Visor */}
       <div
         ref={containerRef}
@@ -229,7 +229,7 @@ export default function RealTimeScanner() {
 
       {/* Resultados Footer */}
       {isLive && (
-        <div className="p-6 bg-neutral-950 border-t border-white/5 pb-6">
+        <div className="p-6 bg-card border-t border-border pb-6">
           <div className="flex flex-wrap gap-2 justify-center max-h-[120px] overflow-y-auto">
             {products.map((p) => (
               <button
@@ -237,7 +237,11 @@ export default function RealTimeScanner() {
                 data-product-text={p.text}
                 type="button"
                 tabIndex={0}
-                className={`px-3 py-2 rounded-xl border flex flex-col gap-0.5 text-left cursor-pointer hover:bg-white/5 focus:outline focus:outline-[3px] focus:outline-green-500 focus:outline-offset-[3px] focus:ring-0 active:scale-95 transition-all ${p.isApto ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'}`}
+                className={`px-3 py-2 rounded-xl border flex flex-col gap-0.5 text-left cursor-pointer focus:outline focus:outline-[3px] focus:outline-green-500 focus:outline-offset-[3px] focus:ring-0 active:scale-95 transition-all ${
+                  p.isApto
+                    ? 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20'
+                    : 'bg-muted/40 border-border hover:bg-muted/80'
+                }`}
                 onClick={() => setSelectedProduct(p)}
                 aria-label={`Ver detalles de ${p.text}`}
               >
@@ -247,20 +251,24 @@ export default function RealTimeScanner() {
                     aria-hidden="true"
                   />
                   <span
-                    className={`text-xs md:text-sm font-bold ${p.isApto ? 'text-green-400 high-contrast:text-green-400 font-extrabold' : 'text-white high-contrast:text-yellow-400 font-extrabold'}`}
+                    className={`text-xs md:text-sm font-bold ${
+                      p.isApto
+                        ? 'text-green-700 dark:text-green-400 high-contrast:text-green-400 font-extrabold'
+                        : 'text-foreground high-contrast:text-yellow-400 font-extrabold'
+                    }`}
                   >
                     {p.text}
                   </span>
                 </div>
                 {p.isApto && p.anmatDetails && (
-                  <span className="text-xs md:text-sm text-green-500/70 dark:text-green-400/80 high-contrast:text-green-300 font-bold tracking-tight pl-3">
+                  <span className="text-xs md:text-sm text-green-600/80 dark:text-green-400/80 high-contrast:text-green-300 font-bold tracking-tight pl-3">
                     {p.anmatDetails}
                   </span>
                 )}
               </button>
             ))}
             {products.length === 0 && (
-              <span className="text-white dark:text-white high-contrast:text-yellow-400 text-sm md:text-base font-black animate-pulse force-reduced-motion:animate-none tracking-widest uppercase">
+              <span className="text-muted-foreground high-contrast:text-yellow-400 text-sm md:text-base font-black animate-pulse force-reduced-motion:animate-none tracking-widest uppercase">
                 ESCANEANDO GÓNDOLA...
               </span>
             )}
@@ -281,7 +289,7 @@ export default function RealTimeScanner() {
           />
 
           <div
-            className="relative w-full max-w-md bg-neutral-900 border-t border-white/10 rounded-t-3xl p-6 shadow-2xl animate-slide-up flex flex-col gap-4 pointer-events-auto z-10"
+            className="relative w-full max-w-md bg-card border-t border-border rounded-t-3xl p-6 shadow-2xl animate-slide-up flex flex-col gap-4 pointer-events-auto z-10"
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -289,7 +297,7 @@ export default function RealTimeScanner() {
           >
             {/* Handle bar (decorative only) */}
             <div
-              className="mx-auto w-12 h-1.5 rounded-full bg-white/20 mb-2"
+              className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/30 mb-2"
               aria-hidden="true"
             />
 
@@ -297,7 +305,7 @@ export default function RealTimeScanner() {
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-2.5">
                 <div
-                  className={`p-2 rounded-xl ${selectedProduct.isApto ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}
+                  className={`p-2 rounded-xl ${selectedProduct.isApto ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/20 text-red-600 dark:text-red-400'}`}
                   aria-hidden="true"
                 >
                   {selectedProduct.isApto ? (
@@ -314,7 +322,11 @@ export default function RealTimeScanner() {
                 >
                   <span
                     id="modal-description"
-                    className={`text-xs md:text-sm font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${selectedProduct.isApto ? 'bg-green-500/20 text-green-400 high-contrast:bg-green-500 high-contrast:text-black font-extrabold' : 'bg-red-500/20 text-red-400 high-contrast:bg-yellow-400 high-contrast:text-black font-extrabold'}`}
+                    className={`text-xs md:text-sm font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${
+                      selectedProduct.isApto
+                        ? 'bg-green-500/10 text-green-700 dark:text-green-400 high-contrast:bg-green-500 high-contrast:text-black font-extrabold'
+                        : 'bg-red-500/10 text-red-600 dark:text-red-400 high-contrast:bg-yellow-400 high-contrast:text-black font-extrabold'
+                    }`}
                   >
                     {selectedProduct.isApto
                       ? 'Apto Sin TACC'
@@ -322,7 +334,7 @@ export default function RealTimeScanner() {
                   </span>
                   <span
                     id="modal-title"
-                    className="block text-white font-bold text-lg leading-tight mt-1"
+                    className="block text-foreground font-bold text-lg leading-tight mt-1"
                   >
                     {selectedProduct.brand || selectedProduct.text}
                   </span>
@@ -332,14 +344,14 @@ export default function RealTimeScanner() {
                 type="button"
                 ref={closeButtonRef}
                 onClick={() => setSelectedProduct(null)}
-                className="p-1.5 rounded-full bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline focus:outline-[3px] focus:outline-white focus:outline-offset-[3px] focus:ring-0"
+                className="p-1.5 rounded-full bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors focus:outline focus:outline-[3px] focus:outline-primary focus:outline-offset-[3px] focus:ring-0"
                 aria-label="Cerrar detalles de producto"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <hr className="border-white/5" />
+            <hr className="border-border" />
 
             {/* Details Content */}
             <div className="flex flex-col gap-3">
@@ -349,10 +361,10 @@ export default function RealTimeScanner() {
                   className="flex flex-col gap-1 text-left w-full focus:outline focus:outline-[3px] focus:outline-yellow-400 focus:outline-offset-[3px] focus:ring-0 rounded-xl p-1 bg-transparent border-none cursor-default"
                   aria-label={`Descripción Oficial de ANMAT: ${selectedProduct.description}`}
                 >
-                  <span className="text-xs md:text-sm font-bold text-white/40 dark:text-white/60 high-contrast:text-white uppercase tracking-wide">
+                  <span className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-wide">
                     Descripción Oficial (ANMAT)
                   </span>
-                  <span className="block text-white/80 text-sm leading-relaxed font-medium bg-white/5 p-3 rounded-xl border border-white/5 w-full text-left">
+                  <span className="block text-foreground text-sm leading-relaxed font-medium bg-muted/40 p-3 rounded-xl border border-border w-full text-left">
                     {selectedProduct.description}
                   </span>
                 </button>
@@ -361,26 +373,26 @@ export default function RealTimeScanner() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  className="bg-white/5 p-3 rounded-xl border border-white/5 flex flex-col gap-1 text-left focus:outline focus:outline-[3px] focus:outline-yellow-400 focus:outline-offset-[3px] focus:ring-0 cursor-default w-full"
+                  className="bg-muted/40 p-3 rounded-xl border border-border flex flex-col gap-1 text-left focus:outline focus:outline-[3px] focus:outline-yellow-400 focus:outline-offset-[3px] focus:ring-0 cursor-default w-full"
                   aria-label={`RNPA: ${selectedProduct.rnpa || 'No disponible'}`}
                 >
-                  <span className="text-xs md:text-sm font-bold text-white/40 dark:text-white/60 high-contrast:text-white uppercase tracking-wide flex items-center gap-1">
+                  <span className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
                     <Tag className="w-3 h-3" /> RNPA
                   </span>
-                  <span className="text-white font-mono text-sm font-bold tracking-wider">
+                  <span className="text-foreground font-mono text-sm font-bold tracking-wider">
                     {selectedProduct.rnpa || 'N/A'}
                   </span>
                 </button>
 
                 <button
                   type="button"
-                  className="bg-white/5 p-3 rounded-xl border border-white/5 flex flex-col gap-1 text-left focus:outline focus:outline-[3px] focus:outline-yellow-400 focus:outline-offset-[3px] focus:ring-0 cursor-default w-full"
+                  className="bg-muted/40 p-3 rounded-xl border border-border flex flex-col gap-1 text-left focus:outline focus:outline-[3px] focus:outline-yellow-400 focus:outline-offset-[3px] focus:ring-0 cursor-default w-full"
                   aria-label={`Coincidencia: ${selectedProduct.score ? `${selectedProduct.score}%` : '100%'}`}
                 >
-                  <span className="text-xs md:text-sm font-bold text-white/40 dark:text-white/60 high-contrast:text-white uppercase tracking-wide flex items-center gap-1">
+                  <span className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
                     <Info className="w-3 h-3" /> Coincidencia
                   </span>
-                  <span className="text-white text-sm font-bold">
+                  <span className="text-foreground text-sm font-bold">
                     {selectedProduct.score
                       ? `${selectedProduct.score}%`
                       : '100%'}
@@ -393,7 +405,7 @@ export default function RealTimeScanner() {
             <button
               type="button"
               onClick={() => setSelectedProduct(null)}
-              className="mt-2 w-full py-3 bg-white text-black font-bold rounded-xl active:scale-98 transition-all text-sm tracking-wide shadow-lg shadow-white/5 hover:bg-neutral-100 focus:outline focus:outline-[3px] focus:outline-white focus:outline-offset-[3px] focus:ring-0"
+              className="mt-2 w-full py-3 bg-primary text-primary-foreground font-bold rounded-xl active:scale-98 transition-all text-sm tracking-wide shadow-lg hover:bg-primary/90 focus:outline focus:outline-[3px] focus:outline-primary focus:outline-offset-[3px] focus:ring-0"
             >
               Entendido
             </button>
