@@ -11,7 +11,7 @@
 		"lint": "biome lint .",
 		"check": "biome check --apply .",
 		"start": "nest start",
-		"start:dev": "bunx --bun prisma generate && nest start --watch",
+		"start:dev": "npx prisma generate && nest start --watch",
 		"start:debug": "nest start --debug --watch",
 		"start:prod": "node dist/main",
 		"test": "jest",
