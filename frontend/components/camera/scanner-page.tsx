@@ -356,7 +356,7 @@ export default function RealTimeScanner() {
                 className="p-1.5 rounded-full bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors focus:outline focus:outline-[3px] focus:outline-primary focus:outline-offset-[3px] focus:ring-0"
                 aria-label="Cerrar detalles de producto"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -365,48 +365,44 @@ export default function RealTimeScanner() {
             {/* Details Content */}
             <div className="flex flex-col gap-3">
               {selectedProduct.description && (
-                <button
-                  type="button"
-                  className="flex flex-col gap-1 text-left w-full focus:outline focus:outline-[3px] focus:outline-yellow-400 focus:outline-offset-[3px] focus:ring-0 rounded-xl p-1 bg-transparent border-none cursor-default"
-                  aria-label={`Descripción Oficial de ANMAT: ${selectedProduct.description}`}
-                >
+                <div className="flex flex-col gap-1 text-left w-full">
                   <span className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-wide">
                     Descripción Oficial (ANMAT)
                   </span>
                   <span className="block text-foreground text-sm leading-relaxed font-medium bg-muted/40 p-3 rounded-xl border border-border w-full text-left">
                     {selectedProduct.description}
                   </span>
-                </button>
+                </div>
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  className="bg-muted/40 p-3 rounded-xl border border-border flex flex-col gap-1 text-left focus:outline focus:outline-[3px] focus:outline-yellow-400 focus:outline-offset-[3px] focus:ring-0 cursor-default w-full"
-                  aria-label={`RNPA: ${selectedProduct.rnpa || 'No disponible'}`}
-                >
+                <div className="bg-muted/40 p-3 rounded-xl border border-border flex flex-col gap-1 text-left w-full">
                   <span className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                    <Tag className="w-3 h-3" /> RNPA
+                    <Tag
+                      className="w-3 h-3 text-primary shrink-0"
+                      aria-hidden="true"
+                    />{' '}
+                    RNPA
                   </span>
                   <span className="text-foreground font-mono text-sm font-bold tracking-wider">
                     {selectedProduct.rnpa || 'N/A'}
                   </span>
-                </button>
+                </div>
 
-                <button
-                  type="button"
-                  className="bg-muted/40 p-3 rounded-xl border border-border flex flex-col gap-1 text-left focus:outline focus:outline-[3px] focus:outline-yellow-400 focus:outline-offset-[3px] focus:ring-0 cursor-default w-full"
-                  aria-label={`Coincidencia: ${selectedProduct.score ? `${selectedProduct.score}%` : '100%'}`}
-                >
+                <div className="bg-muted/40 p-3 rounded-xl border border-border flex flex-col gap-1 text-left w-full">
                   <span className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                    <Info className="w-3 h-3" /> Coincidencia
+                    <Info
+                      className="w-3 h-3 text-primary shrink-0"
+                      aria-hidden="true"
+                    />{' '}
+                    Coincidencia
                   </span>
                   <span className="text-foreground text-sm font-bold">
                     {selectedProduct.score
                       ? `${selectedProduct.score}%`
                       : '100%'}
                   </span>
-                </button>
+                </div>
               </div>
             </div>
 

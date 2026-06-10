@@ -20,7 +20,8 @@ export function BottomNav() {
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
                 className={`
-                  flex h-auto w-full flex-col items-center justify-center rounded-xl px-1 py-2 transition-colors 
+                  flex h-auto w-full flex-col items-center justify-center rounded-xl px-1 py-2 transition-colors
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
                   ${
                     isActive
                       ? 'text-blue-500'
@@ -31,6 +32,7 @@ export function BottomNav() {
                 <Icon
                   className="mb-1 h-5 w-5"
                   strokeWidth={isActive ? 2.5 : 2}
+                  aria-hidden="true"
                 />
                 <span className="font-medium tracking-wide">{item.name}</span>
               </Link>

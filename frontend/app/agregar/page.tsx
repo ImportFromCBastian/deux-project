@@ -297,8 +297,9 @@ export default function CreatePinLocation() {
             >
               <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
               <span>
-                ✓ Ubicación seleccionada: {coords.lat.toFixed(5)},{' '}
-                {coords.lng.toFixed(5)}
+                {geocodingLoading
+                  ? 'Obteniendo dirección...'
+                  : `✓ Ubicación seleccionada: ${address || `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`}`}
               </span>
             </p>
           )}
@@ -325,7 +326,9 @@ export default function CreatePinLocation() {
               <span>Guardando...</span>
             </>
           ) : (
-            <span>🌿 Agregar local</span>
+            <span>
+              <span aria-hidden="true">🌿</span> Agregar local
+            </span>
           )}
         </button>
       </div>

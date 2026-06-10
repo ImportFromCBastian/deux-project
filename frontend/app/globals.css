@@ -140,3 +140,23 @@
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out forwards;
 }
+
+/* 📱 Compatibilidad con Zoom Extremo y Pantallas Pequeñas (Accesibilidad Reflow) */
+@media (max-height: 600px) {
+  body {
+    height: auto !important;
+    min-height: 100dvh;
+    overflow-y: auto !important;
+  }
+  main {
+    height: auto !important;
+    overflow-y: visible !important;
+    min-height: 0 !important;
+    flex: none !important;
+  }
+  /* Previene que mapas, visores de cámara u otros componentes de pantalla completa colapsen a 0px */
+  main .h-full,
+  main .h-dvh {
+    height: 480px !important;
+  }
+}

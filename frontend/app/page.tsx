@@ -23,15 +23,22 @@ export default function Home() {
           Tus compras sin TACC, más seguras que nunca.
         </h1>
 
-        <p className="text-muted-foreground text-base md:text-lg max-w-lg leading-relaxed focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg">
+        <p
+          tabIndex={0}
+          className="text-muted-foreground text-base md:text-lg max-w-lg leading-relaxed focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+        >
           CeliAPP te ayuda a verificar alimentos aptos para celíacos al
           instante, ubicar locales verificados y navegar de forma accesible.
         </p>
 
-        <div className="flex flex-wrap gap-3 justify-center mt-2">
+        <div
+          className="flex flex-wrap gap-3 justify-center mt-2"
+          aria-hidden="true"
+        >
           <Link
             id="hero-scan-cta"
             href="/scanner"
+            tabIndex={-1}
             className="group inline-flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 active:scale-98 transition-all text-sm md:text-base focus:outline-none focus-visible:ring-3 focus-visible:ring-blue-500"
           >
             <Scan className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -40,6 +47,7 @@ export default function Home() {
           <Link
             id="hero-map-cta"
             href="/map"
+            tabIndex={-1}
             className="inline-flex items-center gap-2 px-5 py-3 bg-muted hover:bg-muted/80 text-foreground font-bold rounded-xl active:scale-98 transition-all text-sm md:text-base border border-border focus:outline-none focus-visible:ring-3 focus-visible:ring-ring"
           >
             <MapPin className="w-5 h-5" />
@@ -56,118 +64,100 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: Scanner */}
-          <Card
-            tabIndex={0}
-            aria-label="Escáner de Góndola. Validación en tiempo real con Inteligencia Artificial. Apunta la cámara de tu celular a los productos. CeliAPP detectará los textos de la etiqueta y buscará en tiempo real contra los registros oficiales de la ANMAT si el producto es apto sin TACC."
-            className="hover:scale-[1.02] hover:shadow-xl transition-all duration-300 border border-border bg-card/60 backdrop-blur-md flex flex-col justify-between focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <Link
+            href="/scanner"
+            className="group flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl transition-all h-full"
+            aria-label="Escáner de Góndola. Validación en tiempo real con Inteligencia Artificial. Apunta la cámara de tu celular a los productos. CeliAPP detectará los textos de la etiqueta y buscará en tiempo real contra los registros oficiales de la ANMAT si el producto es apto sin TACC. Presiona Enter para abrir el escáner."
           >
-            <CardHeader>
-              <div className="p-3 w-fit rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 mb-2">
-                <Scan className="w-6 h-6" />
-              </div>
-              <CardTitle className="text-xl font-bold">
-                Escáner de Góndola
-              </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
-                Validación en tiempo real con Inteligencia Artificial.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Apunta la cámara de tu celular a los productos. CeliAPP
-                detectará los textos de la etiqueta y buscará en tiempo real
-                contra los registros oficiales de la ANMAT si el producto es
-                apto sin TACC.
-              </p>
-              <Link
-                id="feature-card-scan-link"
-                href="/scanner"
-                aria-label="Probar escáner de góndola"
-                className="inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-600 text-sm font-semibold tracking-wide group focus:outline-none focus-visible:underline"
-              >
-                Probar escáner
-                <span className="group-hover:translate-x-0.5 transition-transform">
-                  →
+            <Card className="hover:scale-[1.02] hover:shadow-xl transition-all duration-300 border border-border bg-card/60 backdrop-blur-md flex flex-col justify-between h-full w-full">
+              <CardHeader>
+                <div className="p-3 w-fit rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 mb-2">
+                  <Scan className="w-6 h-6" aria-hidden="true" />
+                </div>
+                <CardTitle className="text-xl font-bold">
+                  Escáner de Góndola
+                </CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Validación en tiempo real con Inteligencia Artificial.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Apunta la cámara de tu celular a los productos. CeliAPP
+                  detectará los textos de la etiqueta y buscará en tiempo real
+                  contra los registros oficiales de la ANMAT si el producto es
+                  apto sin TACC.
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-blue-500 group-hover:text-blue-600 text-sm font-semibold tracking-wide group-hover:translate-x-0.5 transition-transform">
+                  Probar escáner →
                 </span>
-              </Link>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
           {/* Card 2: Map */}
-          <Card
-            tabIndex={0}
-            aria-label="Locales Seguros. Encuentra comercios y restaurantes libres de gluten. Navega en el mapa interactivo para descubrir almacenes, dietéticas y restaurantes verificados. Puedes ver los detalles oficiales de cada local y agregarlos para colaborar con la comunidad."
-            className="hover:scale-[1.02] hover:shadow-xl transition-all duration-300 border border-border bg-card/60 backdrop-blur-md flex flex-col justify-between focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <Link
+            href="/map"
+            className="group flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl transition-all h-full"
+            aria-label="Locales Seguros. Encuentra comercios y restaurantes libres de gluten. Navega en el mapa interactivo para descubrir almacenes, dietéticas y restaurantes verificados. Puedes ver los detalles oficiales de cada local y agregarlos para colaborar con la comunidad. Presiona Enter para explorar el mapa."
           >
-            <CardHeader>
-              <div className="p-3 w-fit rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 mb-2">
-                <MapPin className="w-6 h-6" />
-              </div>
-              <CardTitle className="text-xl font-bold">
-                Locales Seguros
-              </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
-                Encuentra comercios y restaurantes libres de gluten.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Navega en el mapa interactivo para descubrir almacenes,
-                dietéticas y restaurantes verificados. Puedes ver los detalles
-                oficiales de cada local y agregarlos para colaborar con la
-                comunidad.
-              </p>
-              <Link
-                id="feature-card-map-link"
-                href="/map"
-                aria-label="Ver mapa de locales seguros"
-                className="inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-600 text-sm font-semibold tracking-wide group focus:outline-none focus-visible:underline"
-              >
-                Ver mapa
-                <span className="group-hover:translate-x-0.5 transition-transform">
-                  →
+            <Card className="hover:scale-[1.02] hover:shadow-xl transition-all duration-300 border border-border bg-card/60 backdrop-blur-md flex flex-col justify-between h-full w-full">
+              <CardHeader>
+                <div className="p-3 w-fit rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 mb-2">
+                  <MapPin className="w-6 h-6" aria-hidden="true" />
+                </div>
+                <CardTitle className="text-xl font-bold">
+                  Locales Seguros
+                </CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Encuentra comercios y restaurantes libres de gluten.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Navega en el mapa interactivo para descubrir almacenes,
+                  dietéticas y restaurantes verificados. Puedes ver los detalles
+                  oficiales de cada local y agregarlos para colaborar con la
+                  comunidad.
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-blue-500 group-hover:text-blue-600 text-sm font-semibold tracking-wide group-hover:translate-x-0.5 transition-transform">
+                  Ver mapa →
                 </span>
-              </Link>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
           {/* Card 3: Accessibility */}
-          <Card
-            tabIndex={0}
-            aria-label="Diseño Accesible. Personaliza la aplicación a tus necesidades visuales. CeliAPP está pensada para ser accesible. Adapta el tamaño del texto, activa el modo de Alto Contraste para una visibilidad perfecta bajo el sol o habilita la tipografía especial para Dislexia."
-            className="hover:scale-[1.02] hover:shadow-xl transition-all duration-300 border border-border bg-card/60 backdrop-blur-md flex flex-col justify-between focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <Link
+            href="/settings"
+            className="group flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl transition-all h-full"
+            aria-label="Diseño Accesible. Personaliza la aplicación a tus necesidades visuales. CeliAPP está pensada para ser accesible. Adapta el tamaño del texto, activa el modo de Alto Contraste para una visibilidad perfecta bajo el sol o habilita la tipografía especial para Dislexia. Presiona Enter para ajustar las opciones de accesibilidad."
           >
-            <CardHeader>
-              <div className="p-3 w-fit rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 mb-2">
-                <Settings2 className="w-6 h-6" />
-              </div>
-              <CardTitle className="text-xl font-bold">
-                Diseño Accesible
-              </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
-                Personaliza la aplicación a tus necesidades visuales.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                CeliAPP está pensada para ser accesible. Adapta el tamaño del
-                texto, activa el modo de Alto Contraste para una visibilidad
-                perfecta bajo el sol o habilita la tipografía especial para
-                Dislexia.
-              </p>
-              <Link
-                id="feature-card-settings-link"
-                href="/settings"
-                aria-label="Ajustar opciones de accesibilidad"
-                className="inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-600 text-sm font-semibold tracking-wide group focus:outline-none focus-visible:underline"
-              >
-                Ajustar accesibilidad
-                <span className="group-hover:translate-x-0.5 transition-transform">
-                  →
+            <Card className="hover:scale-[1.02] hover:shadow-xl transition-all duration-300 border border-border bg-card/60 backdrop-blur-md flex flex-col justify-between h-full w-full">
+              <CardHeader>
+                <div className="p-3 w-fit rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 mb-2">
+                  <Settings2 className="w-6 h-6" aria-hidden="true" />
+                </div>
+                <CardTitle className="text-xl font-bold">
+                  Diseño Accesible
+                </CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Personaliza la aplicación a tus necesidades visuales.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  CeliAPP está pensada para ser accesible. Adapta el tamaño del
+                  texto, activa el modo de Alto Contraste para una visibilidad
+                  perfecta bajo el sol o habilita la tipografía especial para
+                  Dislexia.
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-blue-500 group-hover:text-blue-600 text-sm font-semibold tracking-wide group-hover:translate-x-0.5 transition-transform">
+                  Ajustar accesibilidad →
                 </span>
-              </Link>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </section>
 

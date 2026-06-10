@@ -39,7 +39,7 @@ export function AccessibilityPanel() {
               onClick={resetFontSize}
               className="h-8 px-2 text-xs text-primary flex items-center gap-1"
             >
-              <RefreshCw className="w-3 h-3" /> Reiniciar
+              <RefreshCw className="w-3 h-3" aria-hidden="true" /> Reiniciar
             </Button>
           )}
         </CardTitle>
@@ -48,7 +48,8 @@ export function AccessibilityPanel() {
       <CardContent className="space-y-6">
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm leading-none font-medium select-none">
-            <Type className="w-4 h-4" /> Tamaño de Fuente ({fontSize}%)
+            <Type className="w-4 h-4" aria-hidden="true" /> Tamaño de Fuente (
+            {fontSize}%)
           </div>
           <div className="flex gap-2">
             <Button
@@ -83,7 +84,7 @@ export function AccessibilityPanel() {
               onClick={() => setTheme('light')}
               className="flex flex-col items-center gap-1 h-auto py-3 px-2"
             >
-              <Sun className="w-4 h-4" />
+              <Sun className="w-4 h-4" aria-hidden="true" />
               <span className="text-xs">Claro</span>
             </Button>
             <Button
@@ -91,7 +92,7 @@ export function AccessibilityPanel() {
               onClick={() => setTheme('dark')}
               className="flex flex-col items-center gap-1 h-auto py-3 px-2"
             >
-              <Moon className="w-4 h-4" />
+              <Moon className="w-4 h-4" aria-hidden="true" />
               <span className="text-xs">Oscuro</span>
             </Button>
             <Button
@@ -101,7 +102,7 @@ export function AccessibilityPanel() {
               onClick={() => setTheme('high-contrast')}
               className="flex flex-col items-center gap-1 h-auto py-3 px-2"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4" aria-hidden="true" />
               <span className="text-xs">Contraste</span>
             </Button>
           </div>
@@ -113,7 +114,8 @@ export function AccessibilityPanel() {
               htmlFor="dyslexia-mode"
               className="flex items-center gap-2 cursor-pointer"
             >
-              <EyeOff className="w-4 h-4" /> Fuente para Dislexia
+              <EyeOff className="w-4 h-4" aria-hidden="true" /> Fuente para
+              Dislexia
             </Label>
             <Switch
               id="dyslexia-mode"
@@ -127,7 +129,8 @@ export function AccessibilityPanel() {
               htmlFor="reduced-motion"
               className="flex items-center gap-2 cursor-pointer"
             >
-              <Activity className="w-4 h-4" /> Reducir Animaciones
+              <Activity className="w-4 h-4" aria-hidden="true" /> Reducir
+              Animaciones
             </Label>
             <Switch
               id="reduced-motion"
